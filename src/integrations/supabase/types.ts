@@ -14,7 +14,182 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      configuracoes: {
+        Row: {
+          area_cliente_tr: string | null
+          frase_mes: string
+          id: number
+          logo_tr: string | null
+          updated_at: string
+          whatsapp_tr: string | null
+        }
+        Insert: {
+          area_cliente_tr?: string | null
+          frase_mes?: string
+          id?: number
+          logo_tr?: string | null
+          updated_at?: string
+          whatsapp_tr?: string | null
+        }
+        Update: {
+          area_cliente_tr?: string | null
+          frase_mes?: string
+          id?: number
+          logo_tr?: string | null
+          updated_at?: string
+          whatsapp_tr?: string | null
+        }
+        Relationships: []
+      }
+      documentos: {
+        Row: {
+          arquivo: string
+          created_at: string
+          empresa_id: string
+          extraido: Json | null
+          id: string
+          nome_arquivo: string | null
+          relatorio_id: string | null
+          tipo: string
+        }
+        Insert: {
+          arquivo: string
+          created_at?: string
+          empresa_id: string
+          extraido?: Json | null
+          id?: string
+          nome_arquivo?: string | null
+          relatorio_id?: string | null
+          tipo: string
+        }
+        Update: {
+          arquivo?: string
+          created_at?: string
+          empresa_id?: string
+          extraido?: Json | null
+          id?: string
+          nome_arquivo?: string | null
+          relatorio_id?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_relatorio_id_fkey"
+            columns: ["relatorio_id"]
+            isOneToOne: false
+            referencedRelation: "relatorios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empresas: {
+        Row: {
+          area_cliente: string | null
+          cnpj: string
+          created_at: string
+          email: string | null
+          id: string
+          nome_fantasia: string | null
+          razao_social: string
+          status: string
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          area_cliente?: string | null
+          cnpj: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome_fantasia?: string | null
+          razao_social: string
+          status?: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          area_cliente?: string | null
+          cnpj?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome_fantasia?: string | null
+          razao_social?: string
+          status?: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      relatorios: {
+        Row: {
+          aliquota: number
+          aliquota_anterior: number | null
+          competencia: string
+          created_at: string
+          crescimento: number | null
+          empresa_id: string
+          faturamento_anual: number
+          faturamento_mensal: number
+          faturamento_mes_anterior: number | null
+          id: string
+          imposto: number
+          pdf_url: string | null
+          status: string
+          updated_at: string
+          vencimento: string | null
+        }
+        Insert: {
+          aliquota?: number
+          aliquota_anterior?: number | null
+          competencia: string
+          created_at?: string
+          crescimento?: number | null
+          empresa_id: string
+          faturamento_anual?: number
+          faturamento_mensal?: number
+          faturamento_mes_anterior?: number | null
+          id?: string
+          imposto?: number
+          pdf_url?: string | null
+          status?: string
+          updated_at?: string
+          vencimento?: string | null
+        }
+        Update: {
+          aliquota?: number
+          aliquota_anterior?: number | null
+          competencia?: string
+          created_at?: string
+          crescimento?: number | null
+          empresa_id?: string
+          faturamento_anual?: number
+          faturamento_mensal?: number
+          faturamento_mes_anterior?: number | null
+          id?: string
+          imposto?: number
+          pdf_url?: string | null
+          status?: string
+          updated_at?: string
+          vencimento?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relatorios_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
