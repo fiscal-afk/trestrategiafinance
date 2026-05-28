@@ -79,8 +79,9 @@ function ReportPage() {
         <Button variant="ghost" onClick={() => navigate({ to: "/dashboard" })}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
         </Button>
-        <Button onClick={() => window.print()}>
-          <Download className="h-4 w-4 mr-2" /> Baixar PDF
+        <Button onClick={handleDownload} disabled={downloading}>
+          {downloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+          {downloading ? "Gerando PDF…" : "Baixar PDF"}
         </Button>
       </div>
 
