@@ -19,25 +19,6 @@ function ReportPage() {
   const navigate = useNavigate();
   const [downloading, setDownloading] = useState(false);
 
-  async function handleDownload() {
-    if (!data) return;
-    setDownloading(true);
-    try {
-      const { pdf } = await import("@react-pdf/renderer");
-      const blob = await pdf(<RelatorioPdf rel={data.rel as any} cfg={cfg as any} />).toBlob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const empresa = (data.rel as any).empresas?.nome_fantasia || (data.rel as any).empresas?.razao_social || "relatorio";
-      a.href = url;
-      a.download = `TR-${empresa}-${(data.rel as any).competencia}.pdf`.replace(/\s+/g, "_");
-      a.click();
-      URL.revokeObjectURL(url);
-    } finally {
-      setDownloading(false);
-    }
-  }
-
-
   const { data, isLoading } = useQuery({
     queryKey: ["relatorio", id],
     queryFn: async () => {
@@ -72,6 +53,24 @@ function ReportPage() {
 
   const cresc = r.crescimento ?? 0;
   const aliqDelta = r.aliquota_anterior != null ? Number(r.aliquota) - Number(r.aliquota_anterior) : 0;
+
+  async function handleDownload() {
+    setDownloading(true);
+    try {
+      const { pdf } = await import("@react-pdf/renderer");
+      const blob = await pdf(<RelatorioPdf rel={r as any} cfg={cfg as any} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const empresa = r.empresas?.nome_fantasia || r.empresas?.razao_social || "relatorio";
+      a.href = url;
+      a.download = `TR-${empresa}-${r.competencia}.pdf`.replace(/\s+/g, "_");
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setDownloading(false);
+    }
+  }
+
 
   return (
     <div className="space-y-6">
