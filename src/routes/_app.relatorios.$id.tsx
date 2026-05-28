@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, TrendingUp, TrendingDown, MessageCircle, ExternalLink } from "lucide-react";
+import { ArrowLeft, Download, TrendingUp, TrendingDown, MessageCircle, ExternalLink, Loader2 } from "lucide-react";
 import { brl, pct, ptDate, competenciaRange, monthLabel } from "@/lib/format";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from "recharts";
+import { RelatorioPdf } from "@/components/RelatorioPdf";
 
 export const Route = createFileRoute("/_app/relatorios/$id")({
   head: () => ({ meta: [{ title: "Relatório — TR Estratégia Empresarial" }] }),
@@ -15,6 +17,7 @@ export const Route = createFileRoute("/_app/relatorios/$id")({
 function ReportPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const [downloading, setDownloading] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["relatorio", id],
@@ -51,14 +54,33 @@ function ReportPage() {
   const cresc = r.crescimento ?? 0;
   const aliqDelta = r.aliquota_anterior != null ? Number(r.aliquota) - Number(r.aliquota_anterior) : 0;
 
+  async function handleDownload() {
+    setDownloading(true);
+    try {
+      const { pdf } = await import("@react-pdf/renderer");
+      const blob = await pdf(<RelatorioPdf rel={r as any} cfg={cfg as any} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const empresa = r.empresas?.nome_fantasia || r.empresas?.razao_social || "relatorio";
+      a.href = url;
+      a.download = `TR-${empresa}-${r.competencia}.pdf`.replace(/\s+/g, "_");
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setDownloading(false);
+    }
+  }
+
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3 no-print">
         <Button variant="ghost" onClick={() => navigate({ to: "/dashboard" })}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
         </Button>
-        <Button onClick={() => window.print()}>
-          <Download className="h-4 w-4 mr-2" /> Baixar PDF
+        <Button onClick={handleDownload} disabled={downloading}>
+          {downloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+          {downloading ? "Gerando PDF…" : "Baixar PDF"}
         </Button>
       </div>
 
