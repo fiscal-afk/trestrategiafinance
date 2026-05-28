@@ -97,6 +97,7 @@ export type Database = {
           email: string | null
           id: string
           nome_fantasia: string | null
+          numero_interno: number | null
           razao_social: string
           status: string
           updated_at: string
@@ -109,6 +110,7 @@ export type Database = {
           email?: string | null
           id?: string
           nome_fantasia?: string | null
+          numero_interno?: number | null
           razao_social: string
           status?: string
           updated_at?: string
@@ -121,6 +123,7 @@ export type Database = {
           email?: string | null
           id?: string
           nome_fantasia?: string | null
+          numero_interno?: number | null
           razao_social?: string
           status?: string
           updated_at?: string

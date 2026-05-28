@@ -1,101 +1,181 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCallback, useMemo, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Upload as UploadIcon, FileCheck2, Loader2, Sparkles } from "lucide-react";
+import { Upload as UploadIcon, FileText, CheckCircle2, AlertTriangle, Loader2, Sparkles, X, FileSearch } from "lucide-react";
 import { toast } from "sonner";
-import { extractPgdas, type PgdasExtraction } from "@/lib/extract-pgdas.functions";
 import { brl, pct, ptDate } from "@/lib/format";
+import {
+  pdfToText,
+  detectDocType,
+  extractPgdasFields,
+  extractCnpj,
+  formatCnpj,
+  type DocType,
+  type PgdasFields,
+} from "@/lib/pgdas-parser";
 
 export const Route = createFileRoute("/_app/upload")({
-  head: () => ({ meta: [{ title: "Upload PGDAS — TR Estratégia Empresarial" }] }),
+  head: () => ({ meta: [{ title: "Upload de Documentos — TR Estratégia Empresarial" }] }),
   component: UploadPage,
 });
 
+type ParsedFile = {
+  id: string;
+  file: File;
+  status: "parsing" | "ready" | "error";
+  docType?: DocType;
+  cnpj?: string | null;
+  fields?: PgdasFields;
+  error?: string;
+};
+
+type Empresa = { id: string; numero_interno: number | null; razao_social: string; nome_fantasia: string | null; cnpj: string };
+
+const DOC_LABEL: Record<DocType, string> = { pgdas: "Declaração PGDAS", das: "DAS", recibo: "Recibo" };
+const DOC_TONE: Record<DocType, string> = {
+  pgdas: "bg-accent/15 text-accent",
+  das: "bg-primary/15 text-primary",
+  recibo: "bg-muted text-muted-foreground",
+};
+
 function UploadPage() {
   const navigate = useNavigate();
-  const extract = useServerFn(extractPgdas);
-
-  const [empresaId, setEmpresaId] = useState("");
-  const [pgdas, setPgdas] = useState<File | null>(null);
-  const [recibo, setRecibo] = useState<File | null>(null);
-  const [das, setDas] = useState<File | null>(null);
-  const [extracted, setExtracted] = useState<(PgdasExtraction & { _pgdasPath?: string }) | null>(null);
+  const [files, setFiles] = useState<ParsedFile[]>([]);
 
   const { data: empresas = [] } = useQuery({
-    queryKey: ["empresas", "ativas"],
+    queryKey: ["empresas", "all"],
     queryFn: async () => {
-      const { data } = await supabase.from("empresas").select("id, razao_social, nome_fantasia").eq("status", "ativa").order("razao_social");
-      return data ?? [];
+      const { data } = await (supabase.from("empresas") as any)
+        .select("id, numero_interno, razao_social, nome_fantasia, cnpj")
+        .order("razao_social");
+      return (data ?? []) as Empresa[];
     },
   });
 
-  const upload = async (file: File, tipo: string) => {
-    const path = `${empresaId}/${tipo}/${Date.now()}-${file.name}`;
-    const { error } = await supabase.storage.from("documentos").upload(path, file);
-    if (error) throw error;
-    await supabase.from("documentos").insert({
-      empresa_id: empresaId, tipo, arquivo: path, nome_arquivo: file.name,
-    });
-    return path;
-  };
+  const empresasByCnpj = useMemo(() => {
+    const m = new Map<string, Empresa>();
+    for (const e of empresas) m.set(e.cnpj.replace(/\D/g, ""), e);
+    return m;
+  }, [empresas]);
 
-  const process = useMutation({
-    mutationFn: async () => {
-      if (!empresaId) throw new Error("Selecione uma empresa");
-      if (!pgdas) throw new Error("Envie a declaração PGDAS");
-      const pgdasPath = await upload(pgdas, "pgdas");
-      if (recibo) await upload(recibo, "recibo");
-      if (das) await upload(das, "das");
-      const result = await extract({ data: { bucketPath: pgdasPath } });
-      return { ...result, _pgdasPath: pgdasPath };
-    },
-    onSuccess: (data) => {
-      setExtracted(data);
-      toast.success("Dados extraídos com sucesso");
-    },
-    onError: (e) => toast.error((e as Error).message),
+  const pgdasParsed = files.find((f) => f.docType === "pgdas" && f.status === "ready");
+  const matchedEmpresa = pgdasParsed?.cnpj ? empresasByCnpj.get(pgdasParsed.cnpj) : undefined;
+
+  const onDrop = useCallback(async (accepted: File[]) => {
+    const incoming: ParsedFile[] = accepted.map((f) => ({
+      id: `${f.name}-${f.size}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      file: f,
+      status: "parsing",
+    }));
+    setFiles((prev) => [...prev, ...incoming]);
+
+    for (const item of incoming) {
+      try {
+        const text = await pdfToText(item.file);
+        const docType = detectDocType(text);
+        const cnpj = extractCnpj(text);
+        const fields = docType === "pgdas" ? extractPgdasFields(text) : undefined;
+        setFiles((prev) =>
+          prev.map((p) =>
+            p.id === item.id ? { ...p, status: "ready", docType, cnpj: fields?.cnpj ?? cnpj, fields } : p,
+          ),
+        );
+      } catch (err) {
+        setFiles((prev) =>
+          prev.map((p) =>
+            p.id === item.id ? { ...p, status: "error", error: (err as Error).message } : p,
+          ),
+        );
+      }
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { "application/pdf": [".pdf"] },
+    multiple: true,
   });
+
+  const removeFile = (id: string) => setFiles((prev) => prev.filter((p) => p.id !== id));
 
   const generate = useMutation({
     mutationFn: async () => {
-      if (!extracted || !empresaId) throw new Error("Dados incompletos");
-      const { data, error } = await supabase.from("relatorios").insert({
-        empresa_id: empresaId,
-        competencia: extracted.competencia ?? new Date().toISOString().slice(0, 10),
-        faturamento_mensal: extracted.faturamento_mensal ?? 0,
-        faturamento_anual: extracted.faturamento_anual ?? 0,
-        imposto: extracted.imposto ?? 0,
-        aliquota: extracted.aliquota ?? 0,
-        vencimento: extracted.vencimento,
-        status: "concluido",
-      }).select("id").single();
-      if (error) throw error;
+      if (!pgdasParsed || !pgdasParsed.fields) throw new Error("Envie ao menos uma Declaração PGDAS válida");
+      if (!matchedEmpresa) throw new Error("Empresa não encontrada — cadastre o CNPJ primeiro");
+      const empresa_id = matchedEmpresa.id;
 
-      // Look up previous report for comparison
-      const prev = await supabase.from("relatorios")
+      // Upload all files
+      const uploads: { tipo: DocType; path: string; nome: string }[] = [];
+      for (const f of files) {
+        if (f.status !== "ready" || !f.docType) continue;
+        const path = `${empresa_id}/${f.docType}/${Date.now()}-${f.file.name}`;
+        const { error } = await supabase.storage.from("documentos").upload(path, f.file);
+        if (error) throw new Error(`Falha ao enviar ${f.file.name}: ${error.message}`);
+        uploads.push({ tipo: f.docType, path, nome: f.file.name });
+      }
+
+      const ext = pgdasParsed.fields;
+
+      // Create relatório
+      const { data: rel, error: relErr } = await supabase
+        .from("relatorios")
+        .insert({
+          empresa_id,
+          competencia: ext.competencia ?? new Date().toISOString().slice(0, 10),
+          faturamento_mensal: ext.faturamento_mensal ?? 0,
+          faturamento_anual: ext.faturamento_anual ?? 0,
+          imposto: ext.imposto ?? 0,
+          aliquota: ext.aliquota ?? 0,
+          vencimento: ext.vencimento,
+          faturamento_mes_anterior: ext.faturamento_mes_anterior,
+          status: "concluido",
+        })
+        .select("id")
+        .single();
+      if (relErr) throw relErr;
+
+      // Save documentos
+      if (uploads.length) {
+        await supabase.from("documentos").insert(
+          uploads.map((u) => ({
+            empresa_id,
+            relatorio_id: rel.id,
+            tipo: u.tipo,
+            arquivo: u.path,
+            nome_arquivo: u.nome,
+            extraido: u.tipo === "pgdas" ? (ext as any) : null,
+          })),
+        );
+      }
+
+      // Compare with previous
+      const prev = await supabase
+        .from("relatorios")
         .select("faturamento_mensal, aliquota")
-        .eq("empresa_id", empresaId)
-        .lt("competencia", extracted.competencia ?? new Date().toISOString().slice(0, 10))
+        .eq("empresa_id", empresa_id)
+        .lt("competencia", ext.competencia ?? new Date().toISOString().slice(0, 10))
         .order("competencia", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (prev.data) {
-        const crescimento = prev.data.faturamento_mensal > 0
-          ? ((Number(extracted.faturamento_mensal ?? 0) - Number(prev.data.faturamento_mensal)) / Number(prev.data.faturamento_mensal)) * 100
-          : 0;
-        await supabase.from("relatorios").update({
-          faturamento_mes_anterior: prev.data.faturamento_mensal,
-          aliquota_anterior: prev.data.aliquota,
-          crescimento,
-        }).eq("id", data.id);
+        const fm = Number(ext.faturamento_mensal ?? 0);
+        const pm = Number(prev.data.faturamento_mensal);
+        const crescimento = pm > 0 ? ((fm - pm) / pm) * 100 : 0;
+        await supabase
+          .from("relatorios")
+          .update({
+            faturamento_mes_anterior: ext.faturamento_mes_anterior ?? prev.data.faturamento_mensal,
+            aliquota_anterior: prev.data.aliquota,
+            crescimento,
+          })
+          .eq("id", rel.id);
       }
-      return data.id as string;
+
+      return rel.id as string;
     },
     onSuccess: (id) => {
       toast.success("Relatório gerado!");
@@ -104,122 +184,163 @@ function UploadPage() {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  const canGenerate = !!pgdasParsed && !!matchedEmpresa && !generate.isPending;
+  const anyParsing = files.some((f) => f.status === "parsing");
+
   return (
     <div className="space-y-8">
       <header>
-        <p className="text-sm text-muted-foreground">Processamento</p>
-        <h1 className="font-display text-4xl text-primary mt-1">Upload de Documentos PGDAS</h1>
-        <p className="text-sm text-muted-foreground mt-2">Envie os documentos e a IA extrai os dados automaticamente.</p>
+        <p className="text-sm text-muted-foreground">Processamento automático</p>
+        <h1 className="font-display text-4xl text-primary mt-1">Upload de Documentos</h1>
+        <p className="text-sm text-muted-foreground mt-2">
+          Arraste os PDFs e o sistema identifica automaticamente a empresa, o tipo do documento e extrai todos os
+          dados financeiros via parser nativo — sem IA.
+        </p>
       </header>
 
-      <Card>
-        <CardHeader><CardTitle className="font-display">1. Selecione a empresa</CardTitle></CardHeader>
-        <CardContent>
-          <select value={empresaId} onChange={(e) => setEmpresaId(e.target.value)}
-                  className="w-full h-11 rounded-md border border-input bg-background px-3 text-sm">
-            <option value="">— Escolha uma empresa —</option>
-            {empresas.map((e) => (
-              <option key={e.id} value={e.id}>{e.nome_fantasia || e.razao_social}</option>
-            ))}
-          </select>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader><CardTitle className="font-display">2. Envie os documentos</CardTitle></CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-3">
-          <FileBox label="Declaração PGDAS *" file={pgdas} setFile={setPgdas} />
-          <FileBox label="Recibo" file={recibo} setFile={setRecibo} />
-          <FileBox label="DAS" file={das} setFile={setDas} />
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-end">
-        <Button size="lg" onClick={() => process.mutate()} disabled={process.isPending || !empresaId || !pgdas}>
-          {process.isPending ? (
-            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Extraindo dados…</>
-          ) : (
-            <><Sparkles className="h-4 w-4 mr-2" /> Processar Relatório</>
-          )}
-        </Button>
+      {/* DROPZONE */}
+      <div
+        {...getRootProps()}
+        className={`relative rounded-2xl border-2 border-dashed p-12 text-center cursor-pointer transition ${
+          isDragActive
+            ? "border-accent bg-accent/10"
+            : "border-border hover:border-accent/60 hover:bg-accent/5"
+        }`}
+        style={isDragActive ? { boxShadow: "var(--shadow-elegant)" } : {}}
+      >
+        <input {...getInputProps()} />
+        <div className="mx-auto inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-primary text-primary-foreground mb-4"
+             style={{ background: "var(--gradient-primary)" }}>
+          <UploadIcon className="h-8 w-8" />
+        </div>
+        <h2 className="font-display text-2xl text-primary">
+          {isDragActive ? "Solte os PDFs aqui" : "Arraste os PDFs aqui"}
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">ou clique para selecionar</p>
+        <div className="mt-6 flex items-center justify-center gap-4 flex-wrap text-xs">
+          <DocChip label="Declaração PGDAS" />
+          <DocChip label="Recibo" />
+          <DocChip label="DAS" />
+        </div>
+        <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mt-4">Upload múltiplo permitido</p>
       </div>
 
-      {extracted && (
-        <Card className="border-accent/40" style={{ boxShadow: "var(--shadow-elegant)" }}>
-          <CardHeader><CardTitle className="font-display">3. Confira os dados extraídos</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <EditableField label="Competência" type="date"
-                value={extracted.competencia ?? ""}
-                onChange={(v) => setExtracted({ ...extracted, competencia: v })}
-                display={extracted.competencia ? ptDate(extracted.competencia) : "—"} />
-              <EditableField label="Faturamento Mensal" type="number" step="0.01"
-                value={String(extracted.faturamento_mensal ?? "")}
-                onChange={(v) => setExtracted({ ...extracted, faturamento_mensal: Number(v) || 0 })}
-                display={brl(extracted.faturamento_mensal)} />
-              <EditableField label="Faturamento Anual (RBT12)" type="number" step="0.01"
-                value={String(extracted.faturamento_anual ?? "")}
-                onChange={(v) => setExtracted({ ...extracted, faturamento_anual: Number(v) || 0 })}
-                display={brl(extracted.faturamento_anual)} />
-              <EditableField label="DAS" type="number" step="0.01"
-                value={String(extracted.imposto ?? "")}
-                onChange={(v) => setExtracted({ ...extracted, imposto: Number(v) || 0 })}
-                display={brl(extracted.imposto)} />
-              <EditableField label="Alíquota Efetiva (%)" type="number" step="0.01"
-                value={String(extracted.aliquota ?? "")}
-                onChange={(v) => setExtracted({ ...extracted, aliquota: Number(v) || 0 })}
-                display={pct(extracted.aliquota)} />
-              <EditableField label="Vencimento" type="date"
-                value={extracted.vencimento ?? ""}
-                onChange={(v) => setExtracted({ ...extracted, vencimento: v })}
-                display={extracted.vencimento ? ptDate(extracted.vencimento) : "—"} />
+      {/* FILES LIST */}
+      {files.length > 0 && (
+        <Card>
+          <CardContent className="p-0 divide-y">
+            {files.map((f) => (
+              <FileRow key={f.id} item={f} empresa={f.cnpj ? empresasByCnpj.get(f.cnpj) : undefined} onRemove={() => removeFile(f.id)} />
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* SUMMARY + ACTION */}
+      {pgdasParsed && pgdasParsed.fields && (
+        <Card className="border-accent/40" style={{ boxShadow: "var(--shadow-soft)" }}>
+          <CardContent className="pt-6">
+            <div className="flex items-start justify-between flex-wrap gap-4 mb-5">
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-accent font-semibold">Pré-visualização</p>
+                <h3 className="font-display text-2xl text-primary mt-1">
+                  {matchedEmpresa ? (matchedEmpresa.nome_fantasia || matchedEmpresa.razao_social) : "Empresa não encontrada"}
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  CNPJ {pgdasParsed.cnpj ? formatCnpj(pgdasParsed.cnpj) : "—"}
+                  {matchedEmpresa?.numero_interno != null && (
+                    <span className="ml-2 px-2 py-0.5 rounded bg-muted text-xs">#{matchedEmpresa.numero_interno}</span>
+                  )}
+                </p>
+              </div>
+              {!matchedEmpresa && (
+                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-warning/15 text-warning text-sm">
+                  <AlertTriangle className="h-4 w-4" />
+                  Cadastre essa empresa antes de continuar.
+                </div>
+              )}
             </div>
-            <div className="flex justify-end mt-6 gap-2">
-              <Button variant="outline" onClick={() => setExtracted(null)}>Cancelar</Button>
-              <Button onClick={() => generate.mutate()} disabled={generate.isPending}>
-                {generate.isPending ? "Gerando..." : "Confirmar e gerar relatório"}
-              </Button>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <Metric label="Competência" value={pgdasParsed.fields.competencia ? ptDate(pgdasParsed.fields.competencia) : "—"} />
+              <Metric label="Faturamento Mensal" value={brl(pgdasParsed.fields.faturamento_mensal)} />
+              <Metric label="Faturamento Anual" value={brl(pgdasParsed.fields.faturamento_anual)} />
+              <Metric label="DAS" value={brl(pgdasParsed.fields.imposto)} />
+              <Metric label="Alíquota Efetiva" value={pct(pgdasParsed.fields.aliquota)} highlight />
+              <Metric label="Vencimento" value={pgdasParsed.fields.vencimento ? ptDate(pgdasParsed.fields.vencimento) : "—"} />
             </div>
           </CardContent>
         </Card>
       )}
+
+      <div className="flex items-center justify-end gap-3">
+        {anyParsing && (
+          <span className="text-sm text-muted-foreground inline-flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" /> Lendo PDFs…
+          </span>
+        )}
+        <Button size="lg" disabled={!canGenerate} onClick={() => generate.mutate()}>
+          {generate.isPending ? (
+            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando relatório…</>
+          ) : (
+            <><Sparkles className="h-4 w-4 mr-2" /> Gerar Relatório</>
+          )}
+        </Button>
+      </div>
     </div>
   );
 }
 
-function FileBox({ label, file, setFile }: { label: string; file: File | null; setFile: (f: File | null) => void }) {
+function FileRow({ item, empresa, onRemove }: { item: ParsedFile; empresa?: Empresa; onRemove: () => void }) {
   return (
-    <label className="block cursor-pointer">
-      <span className="text-sm font-medium">{label}</span>
-      <div className={`mt-2 border-2 border-dashed rounded-lg p-6 text-center transition ${
-        file ? "border-success/40 bg-success/5" : "border-border hover:border-accent/60 hover:bg-accent/5"
-      }`}>
-        {file ? (
-          <>
-            <FileCheck2 className="h-8 w-8 mx-auto text-success" />
-            <p className="mt-2 text-xs font-medium truncate">{file.name}</p>
-          </>
-        ) : (
-          <>
-            <UploadIcon className="h-8 w-8 mx-auto text-muted-foreground" />
-            <p className="mt-2 text-xs text-muted-foreground">PDF ou imagem</p>
-          </>
-        )}
+    <div className="flex items-center gap-3 p-4">
+      <div className="h-10 w-10 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
+        <FileText className="h-5 w-5 text-muted-foreground" />
       </div>
-      <input type="file" accept=".pdf,image/*" className="hidden"
-             onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-    </label>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="font-medium text-sm truncate">{item.file.name}</p>
+          {item.docType && (
+            <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-semibold ${DOC_TONE[item.docType]}`}>
+              {DOC_LABEL[item.docType]}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5 truncate">
+          {item.status === "parsing" && "Lendo PDF…"}
+          {item.status === "ready" && (
+            empresa
+              ? `${empresa.razao_social} · CNPJ ${formatCnpj(item.cnpj!)}`
+              : item.cnpj
+                ? `CNPJ ${formatCnpj(item.cnpj)} — empresa não cadastrada`
+                : "CNPJ não identificado"
+          )}
+          {item.status === "error" && (item.error ?? "Erro ao ler o PDF")}
+        </p>
+      </div>
+      <div className="shrink-0">
+        {item.status === "parsing" && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+        {item.status === "ready" && (empresa ? <CheckCircle2 className="h-5 w-5 text-success" /> : <FileSearch className="h-5 w-5 text-warning" />)}
+        {item.status === "error" && <AlertTriangle className="h-5 w-5 text-destructive" />}
+      </div>
+      <Button variant="ghost" size="icon" onClick={onRemove}><X className="h-4 w-4" /></Button>
+    </div>
   );
 }
 
-function EditableField({ label, value, onChange, display, type = "text", step }: {
-  label: string; value: string; onChange: (v: string) => void; display: string; type?: string; step?: string;
-}) {
+function DocChip({ label }: { label: string }) {
   return (
-    <div className="space-y-1.5">
-      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{label}</Label>
-      <Input type={type} step={step} value={value} onChange={(e) => onChange(e.target.value)} />
-      <p className="text-xs text-muted-foreground">Extraído: <span className="font-medium text-foreground">{display}</span></p>
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border bg-card text-foreground/80">
+      <span className="h-1.5 w-1.5 rounded-full bg-accent" /> {label}
+    </span>
+  );
+}
+
+function Metric({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className={`rounded-xl p-4 border ${highlight ? "border-accent/40 bg-accent/5" : "bg-muted/30"}`}>
+      <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</p>
+      <p className={`font-display text-xl mt-1 ${highlight ? "text-accent" : "text-primary"}`}>{value}</p>
     </div>
   );
 }
