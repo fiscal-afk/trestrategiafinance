@@ -17,6 +17,26 @@ export const Route = createFileRoute("/_app/relatorios/$id")({
 function ReportPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const [downloading, setDownloading] = useState(false);
+
+  async function handleDownload() {
+    if (!data) return;
+    setDownloading(true);
+    try {
+      const { pdf } = await import("@react-pdf/renderer");
+      const blob = await pdf(<RelatorioPdf rel={data.rel as any} cfg={cfg as any} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const empresa = (data.rel as any).empresas?.nome_fantasia || (data.rel as any).empresas?.razao_social || "relatorio";
+      a.href = url;
+      a.download = `TR-${empresa}-${(data.rel as any).competencia}.pdf`.replace(/\s+/g, "_");
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setDownloading(false);
+    }
+  }
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["relatorio", id],
