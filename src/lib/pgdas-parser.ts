@@ -81,6 +81,11 @@ function firstNumberAfterLabel(text: string, label: string, maxDistance = 220) {
   return match ? match[1] : null;
 }
 
+function firstMatch(text: string, pattern: RegExp) {
+  const match = text.match(pattern);
+  return match ? match[1] ?? null : null;
+}
+
 function parseCompetencia(year: number, month: number) {
   return `${year}-${String(month).padStart(2, "0")}-01`;
 }
@@ -142,7 +147,10 @@ export function extractPgdasFields(text: string): PgdasFields {
   const faturamento_mensal = rpaRaw ? brlToNumber(rpaRaw) : null;
   addLog(logs, "faturamento_mensal", rpaRaw, faturamento_mensal, faturamento_mensal);
 
-  const rbaRaw = firstNumberAfterLabel(normalizedText, "Receita bruta acumulada no ano-calendário corrente (RBA)");
+  const rbaRaw = firstMatch(
+    normalizedText,
+    /Receita bruta acumulada no ano-calend[aá]rio corrente[\s\S]{0,40}?\(RBA\)[\s\S]{0,30}?(\d{1,3}(?:\.\d{3})*,\d{2})/i,
+  );
   const faturamento_anual = rbaRaw ? brlToNumber(rbaRaw) : null;
   addLog(logs, "faturamento_anual", rbaRaw, faturamento_anual, faturamento_anual);
 
@@ -150,7 +158,10 @@ export function extractPgdasFields(text: string): PgdasFields {
   const receita_resumo_competencia = receitaResumoRaw ? brlToNumber(receitaResumoRaw) : null;
   addLog(logs, "receita_resumo_competencia", receitaResumoRaw, receita_resumo_competencia, receita_resumo_competencia);
 
-  const impostoRaw = firstNumberAfterLabel(normalizedText, "Valor Total do Débito Declarado (R$)");
+  const impostoRaw = firstMatch(
+    normalizedText,
+    /2\.6\) Resumo da Declara[çc][ãa]o[\s\S]{0,120}?Receita Bruta Auferida \(regime compet[eê]ncia\)[\s\S]{0,80}?Valor Total do D[ée]bito Declarado \(R\$\)[\s\S]{0,60}?\d{1,3}(?:\.\d{3})*,\d{2}[\s\S]{0,20}?(\d{1,3}(?:\.\d{3})*,\d{2})/i,
+  ) ?? firstNumberAfterLabel(normalizedText, "Valor Total do Débito Declarado (R$)");
   const imposto = impostoRaw ? brlToNumber(impostoRaw) : null;
   addLog(logs, "imposto", impostoRaw, imposto, imposto);
 
