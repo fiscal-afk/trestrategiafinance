@@ -36,14 +36,15 @@ function ReportPage() {
   const r = data.rel as {
     competencia: string; faturamento_mensal: number; faturamento_anual: number;
     imposto: number; aliquota: number; vencimento: string | null;
-    faturamento_mes_anterior: number | null; aliquota_anterior: number | null; crescimento: number | null;
+    competencia_anterior: string | null; faturamento_mes_anterior: number | null; aliquota_anterior: number | null; crescimento: number | null;
     empresas: { razao_social: string; nome_fantasia: string | null; whatsapp: string | null; area_cliente: string | null };
   };
   const cfg = data.cfg ?? { frase_mes: "Empresas fortes crescem com estratégia e gestão inteligente.", whatsapp_tr: "", area_cliente_tr: "", logo_tr: "" };
 
   const pctAnual = r.faturamento_anual > 0 ? (Number(r.faturamento_mensal) / Number(r.faturamento_anual)) * 100 : 0;
+  const prevMonthName = r.competencia_anterior ? monthLabel(r.competencia_anterior) : "Mês Anterior";
   const compData = r.faturamento_mes_anterior != null ? [
-    { mes: "Mês Anterior", valor: Number(r.faturamento_mes_anterior), kind: "prev" },
+    { mes: prevMonthName, valor: Number(r.faturamento_mes_anterior), kind: "prev" },
     { mes: monthLabel(r.competencia), valor: Number(r.faturamento_mensal), kind: "curr" },
   ] : [];
   const aliqData = r.aliquota_anterior != null ? [

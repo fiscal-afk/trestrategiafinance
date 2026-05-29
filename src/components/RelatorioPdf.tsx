@@ -228,6 +228,7 @@ const s = StyleSheet.create({
 type Cfg = { frase_mes: string; whatsapp_tr: string | null; area_cliente_tr: string | null; logo_tr: string | null };
 type Rel = {
   competencia: string;
+  competencia_anterior: string | null;
   faturamento_mensal: number;
   faturamento_anual: number;
   imposto: number;
@@ -397,7 +398,7 @@ export function RelatorioPdf({ rel, cfg }: { rel: Rel; cfg: Cfg }) {
   const aliqDelta = rel.aliquota_anterior != null ? Number(rel.aliquota) - Number(rel.aliquota_anterior) : 0;
   const empresaNome = rel.empresas.nome_fantasia || rel.empresas.razao_social;
   const mesAtual = monthLabel(rel.competencia);
-  const mesAnterior = monthLabel(prevMonth(rel.competencia));
+  const mesAnterior = rel.competencia_anterior ? monthLabel(rel.competencia_anterior) : monthLabel(prevMonth(rel.competencia));
 
   const barData = rel.faturamento_mes_anterior != null
     ? [

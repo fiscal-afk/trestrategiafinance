@@ -136,6 +136,7 @@ export type Database = {
           aliquota: number
           aliquota_anterior: number | null
           competencia: string
+          competencia_anterior: string | null
           created_at: string
           crescimento: number | null
           empresa_id: string
@@ -153,6 +154,7 @@ export type Database = {
           aliquota?: number
           aliquota_anterior?: number | null
           competencia: string
+          competencia_anterior?: string | null
           created_at?: string
           crescimento?: number | null
           empresa_id: string
@@ -170,6 +172,7 @@ export type Database = {
           aliquota?: number
           aliquota_anterior?: number | null
           competencia?: string
+          competencia_anterior?: string | null
           created_at?: string
           crescimento?: number | null
           empresa_id?: string

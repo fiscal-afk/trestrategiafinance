@@ -64,6 +64,7 @@ function UploadPage() {
 
   const pgdasParsed = files.find((f) => f.docType === "pgdas" && f.status === "ready");
   const matchedEmpresa = pgdasParsed?.cnpj ? empresasByCnpj.get(pgdasParsed.cnpj) : undefined;
+  const extractionErrors = pgdasParsed?.fields?.inconsistencias ?? [];
 
   const onDrop = useCallback(async (accepted: File[]) => {
     const incoming: ParsedFile[] = accepted.map((f) => ({
@@ -106,6 +107,9 @@ function UploadPage() {
     mutationFn: async () => {
       if (!pgdasParsed || !pgdasParsed.fields) throw new Error("Envie ao menos uma Declaração PGDAS válida");
       if (!matchedEmpresa) throw new Error("Empresa não encontrada — cadastre o CNPJ primeiro");
+      if (!pgdasParsed.fields.validacao_ok) {
+        throw new Error(pgdasParsed.fields.inconsistencias[0] ?? "A validação dos valores do PGDAS-D falhou");
+      }
       const empresa_id = matchedEmpresa.id;
 
       // Upload all files
@@ -119,6 +123,13 @@ function UploadPage() {
       }
 
       const ext = pgdasParsed.fields;
+      for (const log of ext.logs) {
+        console.info(`[PGDAS] ${log.campo}`, {
+          original: log.original,
+          convertido: log.convertido,
+          salvo: log.salvo,
+        });
+      }
 
       // Create relatório
       const { data: rel, error: relErr } = await supabase
@@ -131,6 +142,7 @@ function UploadPage() {
           imposto: ext.imposto ?? 0,
           aliquota: ext.aliquota ?? 0,
           vencimento: ext.vencimento,
+          competencia_anterior: ext.competencia_anterior,
           faturamento_mes_anterior: ext.faturamento_mes_anterior,
           status: "concluido",
         })
@@ -168,6 +180,7 @@ function UploadPage() {
         await supabase
           .from("relatorios")
           .update({
+            competencia_anterior: ext.competencia_anterior,
             faturamento_mes_anterior: ext.faturamento_mes_anterior ?? prev.data.faturamento_mensal,
             aliquota_anterior: prev.data.aliquota,
             crescimento,
@@ -184,7 +197,7 @@ function UploadPage() {
     onError: (e) => toast.error((e as Error).message),
   });
 
-  const canGenerate = !!pgdasParsed && !!matchedEmpresa && !generate.isPending;
+  const canGenerate = !!pgdasParsed && !!matchedEmpresa && extractionErrors.length === 0 && !generate.isPending;
   const anyParsing = files.some((f) => f.status === "parsing");
 
   return (
@@ -261,10 +274,24 @@ function UploadPage() {
               )}
             </div>
 
+            {extractionErrors.length > 0 && (
+              <div className="mb-5 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                <div className="font-semibold">Validação do PGDAS-D falhou</div>
+                <ul className="mt-2 list-disc pl-5 space-y-1">
+                  {extractionErrors.map((error) => (
+                    <li key={error}>{error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <Metric label="Competência" value={pgdasParsed.fields.competencia ? ptDate(pgdasParsed.fields.competencia) : "—"} />
+              <Metric label="Competência Anterior" value={pgdasParsed.fields.competencia_anterior ? ptDate(pgdasParsed.fields.competencia_anterior) : "—"} />
               <Metric label="Faturamento Mensal" value={brl(pgdasParsed.fields.faturamento_mensal)} />
               <Metric label="Faturamento Anual" value={brl(pgdasParsed.fields.faturamento_anual)} />
+              <Metric label="Resumo da Declaração" value={brl(pgdasParsed.fields.receita_resumo_competencia)} />
+              <Metric label="Mês Anterior" value={brl(pgdasParsed.fields.faturamento_mes_anterior)} />
               <Metric label="DAS" value={brl(pgdasParsed.fields.imposto)} />
               <Metric label="Alíquota Efetiva" value={pct(pgdasParsed.fields.aliquota)} highlight />
               <Metric label="Vencimento" value={pgdasParsed.fields.vencimento ? ptDate(pgdasParsed.fields.vencimento) : "—"} />
