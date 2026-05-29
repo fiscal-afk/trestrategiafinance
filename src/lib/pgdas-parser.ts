@@ -32,10 +32,35 @@ export async function pdfToText(file: File | Blob): Promise<string> {
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    const text = (content.items as { str: string }[])
-      .map((it) => it.str)
-      .join(" ")
-      .replace(/\s+/g, " ");
+    const items = (content.items as Array<{ str: string; transform?: number[] }>)
+      .filter((it) => it.str?.trim())
+      .map((it) => {
+        const transform = it.transform ?? [];
+        return {
+          str: it.str.trim(),
+          x: Number(transform[4] ?? 0),
+          y: Number(transform[5] ?? 0),
+        };
+      })
+      .sort((a, b) => (Math.abs(b.y - a.y) > 2 ? b.y - a.y : a.x - b.x));
+
+    const lines: Array<{ y: number; parts: typeof items }> = [];
+    for (const item of items) {
+      const existing = lines.find((line) => Math.abs(line.y - item.y) <= 2.5);
+      if (existing) {
+        existing.parts.push(item);
+      } else {
+        lines.push({ y: item.y, parts: [item] });
+      }
+    }
+
+    const text = lines
+      .sort((a, b) => b.y - a.y)
+      .map((line) => line.parts.sort((a, b) => a.x - b.x).map((part) => part.str).join(" "))
+      .join("\n")
+      .replace(/[ \t]+/g, " ")
+      .replace(/\n{2,}/g, "\n");
+
     pages.push(text);
   }
   return pages.join("\n");
