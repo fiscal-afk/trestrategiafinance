@@ -197,7 +197,7 @@ function UploadPage() {
     onError: (e) => toast.error((e as Error).message),
   });
 
-  const canGenerate = !!pgdasParsed && !!matchedEmpresa && !generate.isPending;
+  const canGenerate = !!pgdasParsed && !!matchedEmpresa && extractionErrors.length === 0 && !generate.isPending;
   const anyParsing = files.some((f) => f.status === "parsing");
 
   return (
