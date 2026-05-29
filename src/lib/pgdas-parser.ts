@@ -149,7 +149,7 @@ export function extractPgdasFields(text: string): PgdasFields {
 
   const rbaRaw = firstMatch(
     normalizedText,
-    /Receita bruta acumulada no ano-calend[aá]rio corrente[\s\S]{0,40}?\(RBA\)[\s\S]{0,30}?(\d{1,3}(?:\.\d{3})*,\d{2})/i,
+    /Receita bruta acumulada no ano-calend[aá]rio corrente\s+(\d{1,3}(?:\.\d{3})*,\d{2})/i,
   );
   const faturamento_anual = rbaRaw ? brlToNumber(rbaRaw) : null;
   addLog(logs, "faturamento_anual", rbaRaw, faturamento_anual, faturamento_anual);
@@ -160,7 +160,7 @@ export function extractPgdasFields(text: string): PgdasFields {
 
   const impostoRaw = firstMatch(
     normalizedText,
-    /2\.6\) Resumo da Declara[çc][ãa]o[\s\S]{0,120}?Receita Bruta Auferida \(regime compet[eê]ncia\)[\s\S]{0,80}?Valor Total do D[ée]bito Declarado \(R\$\)[\s\S]{0,60}?\d{1,3}(?:\.\d{3})*,\d{2}[\s\S]{0,20}?(\d{1,3}(?:\.\d{3})*,\d{2})/i,
+    /2\.6\) Resumo da Declara[çc][ãa]o[\s\S]{0,180}?Receita Bruta Auferida \(regime compet[eê]ncia\)[\s\S]{0,120}?Valor Total do D[ée]bito Declarado \(R\$\)\s+(?:\d{1,3}(?:\.\d{3})*,\d{2})\s+(\d{1,3}(?:\.\d{3})*,\d{2})/i,
   ) ?? firstNumberAfterLabel(normalizedText, "Valor Total do Débito Declarado (R$)");
   const imposto = impostoRaw ? brlToNumber(impostoRaw) : null;
   addLog(logs, "imposto", impostoRaw, imposto, imposto);
