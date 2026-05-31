@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { brl, ptDate } from "@/lib/format";
 import { CheckCircle2, Circle, ChevronDown, ChevronRight, Plus } from "lucide-react";
 
@@ -36,7 +36,7 @@ function TarefasList() {
   const [q, setQ] = useState("");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const qc = useQueryClient();
-  const { toast } = useToast();
+  
 
   const { data: tarefas, isLoading } = useQuery({
     queryKey: ["tarefas"],

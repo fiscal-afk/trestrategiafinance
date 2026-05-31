@@ -4,7 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { ArrowLeft, Download, TrendingUp, TrendingDown, MessageCircle, ExternalLink, Loader2 } from "lucide-react";
 import { brl, pct, ptDate, competenciaRange, monthLabel } from "@/lib/format";
 import {
@@ -24,7 +24,7 @@ const PIE_COLORS = ["#3b6fa0", "#0f1b3d", "#7aa6cf"];
 function ReportPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  
   const [loadingPdf, setLoadingPdf] = useState(false);
 
   const { data, isLoading } = useQuery({

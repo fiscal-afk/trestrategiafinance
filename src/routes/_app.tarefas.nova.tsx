@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/tarefas/nova")({
   component: NovaTarefa,
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_app/tarefas/nova")({
 
 function NovaTarefa() {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  
   const [form, setForm] = useState({
     empresa_id: "",
     competencia: new Date().toISOString().slice(0, 7) + "-01",
