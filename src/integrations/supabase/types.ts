@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      checklist_tarefa: {
+        Row: {
+          arquivo_url: string | null
+          concluido: boolean
+          created_at: string
+          id: string
+          tarefa_id: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          arquivo_url?: string | null
+          concluido?: boolean
+          created_at?: string
+          id?: string
+          tarefa_id: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          arquivo_url?: string | null
+          concluido?: boolean
+          created_at?: string
+          id?: string
+          tarefa_id?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_tarefa_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       configuracoes: {
         Row: {
           area_cliente_tr: string | null
@@ -195,6 +233,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tarefas: {
+        Row: {
+          categoria: string | null
+          classificacao: string
+          competencia: string
+          concluida_automaticamente: boolean
+          concluido_em: string | null
+          created_at: string
+          empresa_id: string
+          faturamento: number | null
+          id: string
+          possui_imposto: boolean | null
+          recorrente: boolean
+          relatorio_id: string | null
+          status: string
+          titulo: string
+          updated_at: string
+          valor_imposto: number | null
+        }
+        Insert: {
+          categoria?: string | null
+          classificacao?: string
+          competencia: string
+          concluida_automaticamente?: boolean
+          concluido_em?: string | null
+          created_at?: string
+          empresa_id: string
+          faturamento?: number | null
+          id?: string
+          possui_imposto?: boolean | null
+          recorrente?: boolean
+          relatorio_id?: string | null
+          status?: string
+          titulo: string
+          updated_at?: string
+          valor_imposto?: number | null
+        }
+        Update: {
+          categoria?: string | null
+          classificacao?: string
+          competencia?: string
+          concluida_automaticamente?: boolean
+          concluido_em?: string | null
+          created_at?: string
+          empresa_id?: string
+          faturamento?: number | null
+          id?: string
+          possui_imposto?: boolean | null
+          recorrente?: boolean
+          relatorio_id?: string | null
+          status?: string
+          titulo?: string
+          updated_at?: string
+          valor_imposto?: number | null
+        }
+        Relationships: []
       }
     }
     Views: {
