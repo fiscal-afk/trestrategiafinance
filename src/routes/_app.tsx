@@ -1,7 +1,7 @@
 import { createFileRoute, redirect, Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { TrLogo } from "@/components/TrLogo";
-import { LayoutDashboard, Building2, Upload, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Building2, Upload, Settings, LogOut, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_app")({
@@ -17,6 +17,7 @@ const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/empresas", label: "Empresas", icon: Building2 },
   { to: "/upload", label: "Upload PGDAS", icon: Upload },
+  { to: "/tarefas", label: "Tarefas", icon: ListChecks },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ] as const;
 
