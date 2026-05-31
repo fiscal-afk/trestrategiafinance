@@ -68,7 +68,7 @@ function NovaTarefa() {
       toast.success("Tarefa criada");
       navigate({ to: "/tarefas" });
     },
-    onError: (e: any) => toast.error("Erro"),
+    onError: (e: any) => toast.error("Erro", { description: e.message }),
   });
 
   return (
