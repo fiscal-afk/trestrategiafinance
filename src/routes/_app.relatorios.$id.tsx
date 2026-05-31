@@ -72,7 +72,7 @@ function ReportPage() {
     try {
       setLoadingPdf(true);
       if (!relatorio) {
-        toast({ title: "Relatório não encontrado", variant: "destructive" });
+        toast.error("Relatório não encontrado");
         return;
       }
       const { pdf } = await import("@react-pdf/renderer");
@@ -86,10 +86,10 @@ function ReportPage() {
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      toast({ title: "PDF gerado com sucesso" });
+      toast.success("PDF gerado com sucesso");
     } catch (error) {
       console.error("PDF ERROR:", error);
-      toast({ title: "Erro ao gerar PDF", description: "Verifique o console", variant: "destructive" });
+      toast.error("Erro ao gerar PDF", { description: "Verifique o console" });
     } finally {
       setLoadingPdf(false);
     }
