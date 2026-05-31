@@ -13,9 +13,13 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppUploadRouteImport } from './routes/_app.upload'
+import { Route as AppTarefasRouteImport } from './routes/_app.tarefas'
 import { Route as AppEmpresasRouteImport } from './routes/_app.empresas'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppConfiguracoesRouteImport } from './routes/_app.configuracoes'
+import { Route as AppTarefasIndexRouteImport } from './routes/_app.tarefas.index'
+import { Route as AppTarefasRecorrentesRouteImport } from './routes/_app.tarefas.recorrentes'
+import { Route as AppTarefasNovaRouteImport } from './routes/_app.tarefas.nova'
 import { Route as AppRelatoriosIdRouteImport } from './routes/_app.relatorios.$id'
 
 const LoginRoute = LoginRouteImport.update({
@@ -37,6 +41,11 @@ const AppUploadRoute = AppUploadRouteImport.update({
   path: '/upload',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTarefasRoute = AppTarefasRouteImport.update({
+  id: '/tarefas',
+  path: '/tarefas',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEmpresasRoute = AppEmpresasRouteImport.update({
   id: '/empresas',
   path: '/empresas',
@@ -52,6 +61,21 @@ const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   path: '/configuracoes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTarefasIndexRoute = AppTarefasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppTarefasRoute,
+} as any)
+const AppTarefasRecorrentesRoute = AppTarefasRecorrentesRouteImport.update({
+  id: '/recorrentes',
+  path: '/recorrentes',
+  getParentRoute: () => AppTarefasRoute,
+} as any)
+const AppTarefasNovaRoute = AppTarefasNovaRouteImport.update({
+  id: '/nova',
+  path: '/nova',
+  getParentRoute: () => AppTarefasRoute,
+} as any)
 const AppRelatoriosIdRoute = AppRelatoriosIdRouteImport.update({
   id: '/relatorios/$id',
   path: '/relatorios/$id',
@@ -64,8 +88,12 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AppConfiguracoesRoute
   '/dashboard': typeof AppDashboardRoute
   '/empresas': typeof AppEmpresasRoute
+  '/tarefas': typeof AppTarefasRouteWithChildren
   '/upload': typeof AppUploadRoute
   '/relatorios/$id': typeof AppRelatoriosIdRoute
+  '/tarefas/nova': typeof AppTarefasNovaRoute
+  '/tarefas/recorrentes': typeof AppTarefasRecorrentesRoute
+  '/tarefas/': typeof AppTarefasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +103,9 @@ export interface FileRoutesByTo {
   '/empresas': typeof AppEmpresasRoute
   '/upload': typeof AppUploadRoute
   '/relatorios/$id': typeof AppRelatoriosIdRoute
+  '/tarefas/nova': typeof AppTarefasNovaRoute
+  '/tarefas/recorrentes': typeof AppTarefasRecorrentesRoute
+  '/tarefas': typeof AppTarefasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -84,8 +115,12 @@ export interface FileRoutesById {
   '/_app/configuracoes': typeof AppConfiguracoesRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/empresas': typeof AppEmpresasRoute
+  '/_app/tarefas': typeof AppTarefasRouteWithChildren
   '/_app/upload': typeof AppUploadRoute
   '/_app/relatorios/$id': typeof AppRelatoriosIdRoute
+  '/_app/tarefas/nova': typeof AppTarefasNovaRoute
+  '/_app/tarefas/recorrentes': typeof AppTarefasRecorrentesRoute
+  '/_app/tarefas/': typeof AppTarefasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -95,8 +130,12 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/empresas'
+    | '/tarefas'
     | '/upload'
     | '/relatorios/$id'
+    | '/tarefas/nova'
+    | '/tarefas/recorrentes'
+    | '/tarefas/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,6 +145,9 @@ export interface FileRouteTypes {
     | '/empresas'
     | '/upload'
     | '/relatorios/$id'
+    | '/tarefas/nova'
+    | '/tarefas/recorrentes'
+    | '/tarefas'
   id:
     | '__root__'
     | '/'
@@ -114,8 +156,12 @@ export interface FileRouteTypes {
     | '/_app/configuracoes'
     | '/_app/dashboard'
     | '/_app/empresas'
+    | '/_app/tarefas'
     | '/_app/upload'
     | '/_app/relatorios/$id'
+    | '/_app/tarefas/nova'
+    | '/_app/tarefas/recorrentes'
+    | '/_app/tarefas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -154,6 +200,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppUploadRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/tarefas': {
+      id: '/_app/tarefas'
+      path: '/tarefas'
+      fullPath: '/tarefas'
+      preLoaderRoute: typeof AppTarefasRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/empresas': {
       id: '/_app/empresas'
       path: '/empresas'
@@ -175,6 +228,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfiguracoesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/tarefas/': {
+      id: '/_app/tarefas/'
+      path: '/'
+      fullPath: '/tarefas/'
+      preLoaderRoute: typeof AppTarefasIndexRouteImport
+      parentRoute: typeof AppTarefasRoute
+    }
+    '/_app/tarefas/recorrentes': {
+      id: '/_app/tarefas/recorrentes'
+      path: '/recorrentes'
+      fullPath: '/tarefas/recorrentes'
+      preLoaderRoute: typeof AppTarefasRecorrentesRouteImport
+      parentRoute: typeof AppTarefasRoute
+    }
+    '/_app/tarefas/nova': {
+      id: '/_app/tarefas/nova'
+      path: '/nova'
+      fullPath: '/tarefas/nova'
+      preLoaderRoute: typeof AppTarefasNovaRouteImport
+      parentRoute: typeof AppTarefasRoute
+    }
     '/_app/relatorios/$id': {
       id: '/_app/relatorios/$id'
       path: '/relatorios/$id'
@@ -185,10 +259,27 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppTarefasRouteChildren {
+  AppTarefasNovaRoute: typeof AppTarefasNovaRoute
+  AppTarefasRecorrentesRoute: typeof AppTarefasRecorrentesRoute
+  AppTarefasIndexRoute: typeof AppTarefasIndexRoute
+}
+
+const AppTarefasRouteChildren: AppTarefasRouteChildren = {
+  AppTarefasNovaRoute: AppTarefasNovaRoute,
+  AppTarefasRecorrentesRoute: AppTarefasRecorrentesRoute,
+  AppTarefasIndexRoute: AppTarefasIndexRoute,
+}
+
+const AppTarefasRouteWithChildren = AppTarefasRoute._addFileChildren(
+  AppTarefasRouteChildren,
+)
+
 interface AppRouteChildren {
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppEmpresasRoute: typeof AppEmpresasRoute
+  AppTarefasRoute: typeof AppTarefasRouteWithChildren
   AppUploadRoute: typeof AppUploadRoute
   AppRelatoriosIdRoute: typeof AppRelatoriosIdRoute
 }
@@ -197,6 +288,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppEmpresasRoute: AppEmpresasRoute,
+  AppTarefasRoute: AppTarefasRouteWithChildren,
   AppUploadRoute: AppUploadRoute,
   AppRelatoriosIdRoute: AppRelatoriosIdRoute,
 }
