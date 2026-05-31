@@ -85,7 +85,6 @@ function TarefasList() {
               open={!!expanded[t.id]}
               onToggle={() => setExpanded((s) => ({ ...s, [t.id]: !s[t.id] }))}
               onChange={() => qc.invalidateQueries({ queryKey: ["tarefas"] })}
-              toast={toast}
             />
           ))}
         </div>
@@ -95,8 +94,8 @@ function TarefasList() {
 }
 
 function TarefaRow({
-  t, open, onToggle, onChange, toast,
-}: { t: Tarefa; open: boolean; onToggle: () => void; onChange: () => void; toast: ReturnType<typeof useToast>["toast"] }) {
+  t, open, onToggle, onChange,
+}: { t: Tarefa; open: boolean; onToggle: () => void; onChange: () => void }) {
   const empresaNome = t.empresas?.nome_fantasia || t.empresas?.razao_social || "—";
   const cls = CLASSIF[t.classificacao] ?? CLASSIF.sem_info;
   const concluida = t.status === "concluida";
@@ -134,9 +133,9 @@ function TarefaRow({
     },
     onSuccess: () => {
       onChange();
-      toast({ title: "Checklist atualizado" });
+      toast.success("Checklist atualizado");
     },
-    onError: (e: any) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+    onError: (e: any) => toast.error("Erro", { description: e.message }),
   });
 
   return (
