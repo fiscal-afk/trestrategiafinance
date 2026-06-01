@@ -32,11 +32,19 @@ const CLASSIF: Record<string, { label: string; cls: string }> = {
   sem_info: { label: "Sem informação", cls: "bg-destructive/15 text-destructive border-destructive/30" },
 };
 
+type Filtro = "todos" | "com_imposto" | "sem_imposto" | "sem_info";
+const FILTROS: { id: Filtro; label: string }[] = [
+  { id: "todos", label: "Todos" },
+  { id: "com_imposto", label: "Com imposto" },
+  { id: "sem_imposto", label: "Sem imposto" },
+  { id: "sem_info", label: "Sem informação" },
+];
+
 function TarefasList() {
   const [q, setQ] = useState("");
+  const [filtro, setFiltro] = useState<Filtro>("todos");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const qc = useQueryClient();
-  
 
   const { data: tarefas, isLoading } = useQuery({
     queryKey: ["tarefas"],
@@ -52,6 +60,7 @@ function TarefasList() {
   });
 
   const filtered = (tarefas ?? []).filter((t) => {
+    if (filtro !== "todos" && t.classificacao !== filtro) return false;
     if (!q) return true;
     const s = q.toLowerCase();
     return (
@@ -61,13 +70,37 @@ function TarefasList() {
     );
   });
 
+  const counts = {
+    todos: tarefas?.length ?? 0,
+    com_imposto: tarefas?.filter((t) => t.classificacao === "com_imposto").length ?? 0,
+    sem_imposto: tarefas?.filter((t) => t.classificacao === "sem_imposto").length ?? 0,
+    sem_info: tarefas?.filter((t) => t.classificacao === "sem_info").length ?? 0,
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <Input placeholder="Buscar por empresa ou título…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-md" />
         <Button asChild>
           <Link to="/tarefas/nova"><Plus className="h-4 w-4 mr-2" /> Nova tarefa</Link>
         </Button>
+      </div>
+
+      <div className="flex gap-2 flex-wrap">
+        {FILTROS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => setFiltro(f.id)}
+            className={`px-3 py-1.5 rounded-full border text-sm transition ${
+              filtro === f.id
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card hover:bg-muted border-border text-muted-foreground"
+            }`}
+          >
+            {f.label} <span className="opacity-60 ml-1">{counts[f.id]}</span>
+          </button>
+        ))}
       </div>
 
       {isLoading ? (
