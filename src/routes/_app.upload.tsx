@@ -188,6 +188,25 @@ function UploadPage() {
           .eq("id", rel.id);
       }
 
+      // Cria tarefa automática e classifica
+      const fatNum = Number(ext.faturamento_mensal ?? 0);
+      const impNum = Number(ext.imposto ?? 0);
+      const possuiImposto = fatNum > 0 && impNum > 0;
+      const classificacao = possuiImposto ? "com_imposto" : (fatNum === 0 && impNum === 0 ? "sem_imposto" : "sem_imposto");
+      const titulo = `${matchedEmpresa.nome_fantasia || matchedEmpresa.razao_social} — ${ext.competencia ?? ""}`;
+      await (supabase as any).from("tarefas").insert({
+        empresa_id,
+        relatorio_id: rel.id,
+        competencia: ext.competencia ?? new Date().toISOString().slice(0, 10),
+        titulo,
+        categoria: possuiImposto ? "Imposto a pagar" : "Sem imposto",
+        classificacao,
+        possui_imposto: possuiImposto,
+        faturamento: fatNum,
+        valor_imposto: impNum,
+        status: "pendente",
+      });
+
       return rel.id as string;
     },
     onSuccess: (id) => {
