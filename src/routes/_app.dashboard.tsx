@@ -16,27 +16,39 @@ function DashboardPage() {
     queryFn: async () => {
       const [emp, rel] = await Promise.all([
         supabase.from("empresas").select("id, razao_social, nome_fantasia, status, created_at").order("created_at", { ascending: false }),
-        supabase.from("relatorios").select("id, empresa_id, competencia, faturamento_mensal, status, created_at, empresas(razao_social, nome_fantasia)").order("created_at", { ascending: false }),
+        supabase.from("relatorios").select("id, empresa_id, competencia, faturamento_mensal, imposto, status, created_at, empresas(razao_social, nome_fantasia)").order("competencia", { ascending: false }),
       ]);
       const empresas = emp.data ?? [];
       const relatorios = rel.data ?? [];
       const ativas = empresas.filter((e) => e.status === "ativa").length;
-      const now = new Date();
-      const mesAtual = relatorios.filter((r) => {
-        const d = new Date(r.competencia);
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-      });
-      const faturamentoMes = mesAtual.reduce((s, r) => s + Number(r.faturamento_mensal ?? 0), 0);
-      const pendentes = relatorios.filter((r) => r.status !== "concluido").length;
-      return { empresas, relatorios, ativas, mesAtual: mesAtual.length, faturamentoMes, pendentes };
+
+      // Último relatório por empresa
+      const latestByEmp = new Map<string, typeof relatorios[number]>();
+      for (const r of relatorios) {
+        if (!latestByEmp.has(r.empresa_id)) latestByEmp.set(r.empresa_id, r);
+      }
+      const faturamentoTotal = Array.from(latestByEmp.values())
+        .reduce((s, r) => s + Number(r.faturamento_mensal ?? 0), 0);
+
+      let comImposto = 0, semImposto = 0;
+      for (const r of latestByEmp.values()) {
+        const fat = Number(r.faturamento_mensal ?? 0);
+        const imp = Number(r.imposto ?? 0);
+        if (fat > 0 && imp > 0) comImposto++;
+        else semImposto++;
+      }
+      const semRelatorio = empresas.filter((e) => !latestByEmp.has(e.id)).length;
+
+      return { empresas, relatorios, ativas, faturamentoTotal, comImposto, semImposto, semRelatorio };
     },
   });
 
   const stats = [
     { label: "Empresas ativas", value: data?.ativas ?? 0, icon: Building2, hint: `${data?.empresas.length ?? 0} no total` },
-    { label: "Relatórios do mês", value: data?.mesAtual ?? 0, icon: FileText, hint: "Competência atual" },
-    { label: "Faturamento total (mês)", value: brl(data?.faturamentoMes ?? 0), icon: TrendingUp, hint: "Soma de todas as empresas" },
-    { label: "Relatórios pendentes", value: data?.pendentes ?? 0, icon: Clock, hint: "Aguardando geração" },
+    { label: "Faturamento total", value: brl(data?.faturamentoTotal ?? 0), icon: TrendingUp, hint: "Soma do último relatório de cada empresa" },
+    { label: "Com imposto", value: data?.comImposto ?? 0, icon: FileText, hint: "Empresas com DAS a pagar" },
+    { label: "Sem imposto", value: data?.semImposto ?? 0, icon: Clock, hint: "Empresas sem DAS no período" },
+    { label: "Sem relatório", value: data?.semRelatorio ?? 0, icon: AlertCircle, hint: "Empresas sem upload de PGDAS" },
   ];
 
   return (
