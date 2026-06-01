@@ -9,10 +9,9 @@ import { ArrowLeft, Download, TrendingUp, TrendingDown, MessageCircle, ExternalL
 import { brl, pct, ptDate, competenciaRange, monthLabel } from "@/lib/format";
 import {
   ResponsiveContainer,
-  LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip,
+  BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip,
   PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { ReportPDF } from "@/components/pdf/ReportPDF";
 
 export const Route = createFileRoute("/_app/relatorios/$id")({
   head: () => ({ meta: [{ title: "Relatório — TR Estratégia Empresarial" }] }),
@@ -24,7 +23,7 @@ const PIE_COLORS = ["#3b6fa0", "#0f1b3d", "#7aa6cf"];
 function ReportPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  
+
   const [loadingPdf, setLoadingPdf] = useState(false);
 
   const { data, isLoading } = useQuery({
@@ -55,10 +54,13 @@ function ReportPage() {
   const percentual = faturamentoAnual > 0 ? (faturamentoMensal / faturamentoAnual) * 100 : 0;
 
   const prevMonthName = relatorio.competencia_anterior ? monthLabel(relatorio.competencia_anterior) : "Mês Anterior";
-  const lineData = relatorio.faturamento_mes_anterior != null ? [
-    { mes: prevMonthName, valor: Number(relatorio.faturamento_mes_anterior) },
-    { mes: monthLabel(relatorio.competencia), valor: faturamentoMensal },
-  ] : [{ mes: monthLabel(relatorio.competencia), valor: faturamentoMensal }];
+  const currMonthName = monthLabel(relatorio.competencia);
+  const fmAnt = relatorio.faturamento_mes_anterior != null ? Number(relatorio.faturamento_mes_anterior) : null;
+
+  const barData = fmAnt != null ? [
+    { mes: prevMonthName, valor: fmAnt },
+    { mes: currMonthName, valor: faturamentoMensal },
+  ] : [{ mes: currMonthName, valor: faturamentoMensal }];
 
   const dadosPizza = [
     { nome: "Receita Mensal", valor: faturamentoMensal },
@@ -66,30 +68,58 @@ function ReportPage() {
     { nome: "Percentual", valor: percentual },
   ];
 
-  const cresc = Number(relatorio.crescimento ?? 0);
+  // Recalcula crescimento ao vivo — não confia no valor salvo
+  const cresc = fmAnt != null && fmAnt > 0
+    ? ((faturamentoMensal - fmAnt) / fmAnt) * 100
+    : 0;
 
   async function baixarPDF() {
     try {
       setLoadingPdf(true);
-      if (!relatorio) {
-        toast.error("Relatório não encontrado");
+      const element = document.getElementById("report-container");
+      if (!element) {
+        toast.error("Container do relatório não encontrado");
         return;
       }
-      const { pdf } = await import("@react-pdf/renderer");
-      const blob = await pdf(<ReportPDF rel={relatorio as any} cfg={config as any} />).toBlob();
-      const fileName = `relatorio-${relatorio.id}.pdf`;
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const empresa = (relatorio.empresas.nome_fantasia || relatorio.empresas.razao_social || "relatorio")
+        .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      pdf.save(`relatorio-${empresa}-${relatorio.competencia}.pdf`);
       toast.success("PDF gerado com sucesso");
     } catch (error) {
       console.error("PDF ERROR:", error);
-      toast.error("Erro ao gerar PDF", { description: "Verifique o console" });
+      toast.error("Erro ao gerar PDF", { description: (error as Error).message });
     } finally {
       setLoadingPdf(false);
     }
@@ -107,7 +137,7 @@ function ReportPage() {
         </Button>
       </div>
 
-      <article className="bg-card rounded-2xl overflow-hidden border" style={{ boxShadow: "var(--shadow-elegant)" }}>
+      <article id="report-container" className="bg-card rounded-2xl overflow-hidden border" style={{ boxShadow: "var(--shadow-elegant)" }}>
         <header className="p-8 lg:p-12 text-primary-foreground" style={{ background: "var(--gradient-primary)" }}>
           <p className="text-xs uppercase tracking-[0.25em] opacity-70">TR Estratégia Empresarial</p>
           <h1 className="font-display text-3xl lg:text-5xl mt-3">{relatorio.empresas.nome_fantasia || relatorio.empresas.razao_social}</h1>
@@ -144,6 +174,7 @@ function ReportPage() {
                           innerRadius={55}
                           paddingAngle={4}
                           label
+                          isAnimationActive={false}
                         >
                           {dadosPizza.map((_, i) => (
                             <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
@@ -182,8 +213,8 @@ function ReportPage() {
             </Card>
           </section>
 
-          {/* Comparação Mensal — Line Chart */}
-          {relatorio.faturamento_mes_anterior != null && (
+          {/* Comparação Mensal — Bar Chart */}
+          {fmAnt != null && (
             <section>
               <h2 className="font-display text-2xl text-primary mb-1">Comparação Mensal</h2>
               <p className="text-sm text-muted-foreground mb-4">Evolução do faturamento entre competências</p>
@@ -191,23 +222,20 @@ function ReportPage() {
                 <CardContent className="pt-6">
                   <div className="h-[320px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={lineData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                      <BarChart data={barData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e3e8ef" />
                         <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
                         <YAxis tickFormatter={(v) => `R$ ${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
                         <Tooltip formatter={(v: number) => brl(v)} />
-                        <Line
-                          type="monotone"
-                          dataKey="valor"
-                          stroke="#3b6fa0"
-                          strokeWidth={3}
-                          dot={{ r: 5, fill: "#0f1b3d" }}
-                          activeDot={{ r: 7 }}
-                        />
-                      </LineChart>
+                        <Bar dataKey="valor" radius={[8, 8, 0, 0]} isAnimationActive={false}>
+                          {barData.map((_, i) => (
+                            <Cell key={i} fill={i === 0 ? "#7aa6cf" : "#0f1b3d"} />
+                          ))}
+                        </Bar>
+                      </BarChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="mt-4 flex items-center gap-3">
+                  <div className="mt-4 flex items-center gap-3 flex-wrap">
                     <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
                       cresc >= 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
                     }`}>
@@ -215,8 +243,8 @@ function ReportPage() {
                       {cresc >= 0 ? "+" : ""}{pct(cresc)}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Comparado a {prevMonthName} ({brl(relatorio.faturamento_mes_anterior)}), o faturamento apresentou{" "}
-                      {cresc >= 0 ? "crescimento" : "redução"} de <strong>{pct(Math.abs(cresc))}</strong>.
+                      Comparado a {prevMonthName} ({brl(fmAnt)}) e {currMonthName} ({brl(faturamentoMensal)}),
+                      o faturamento apresentou {cresc >= 0 ? "crescimento" : "redução"} de <strong>{pct(Math.abs(cresc))}</strong>.
                     </p>
                   </div>
                 </CardContent>
