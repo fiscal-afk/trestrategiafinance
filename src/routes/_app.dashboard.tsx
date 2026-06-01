@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, FileText, TrendingUp, Clock } from "lucide-react";
+import { Building2, FileText, TrendingUp, Clock, AlertCircle } from "lucide-react";
 import { brl, ptDate } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/dashboard")({
