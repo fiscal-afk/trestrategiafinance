@@ -58,7 +58,7 @@ function DashboardPage() {
         <h1 className="font-display text-4xl text-primary mt-1">Dashboard</h1>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {stats.map((s) => {
           const Icon = s.icon;
           return (
