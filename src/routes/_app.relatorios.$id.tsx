@@ -205,7 +205,7 @@ function ReportPage() {
           )}
 
           {/* Frase do mês */}
-          <section className="rounded-xl p-8 text-center" style={{ background: "var(--gradient-accent)" }}>
+          <section className="rounded-xl p-8 text-center print-order-2" style={{ background: "var(--gradient-accent)" }}>
             <p className="font-display text-2xl lg:text-3xl text-primary-foreground leading-snug">
               "{config.frase_mes}"
             </p>
