@@ -22,7 +22,7 @@ function ReportPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
 
-  const [loadingPdf, setLoadingPdf] = useState(false);
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["relatorio", id],
