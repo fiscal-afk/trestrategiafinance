@@ -86,11 +86,63 @@ function ReportPage() {
         import("jspdf"),
       ]);
 
+      // Substitui tokens oklch() por rgb/hex equivalentes no clone usado
+      // pelo html2canvas (que não suporta oklch). Mantém aparência idêntica.
+      const PDF_TOKENS_CSS = `
+        :root, .dark {
+          --background: #f7f8fa;
+          --foreground: #1a1f3a;
+          --card: #ffffff;
+          --card-foreground: #1a1f3a;
+          --popover: #ffffff;
+          --popover-foreground: #1a1f3a;
+          --primary: #1a2547;
+          --primary-foreground: #f7f8fa;
+          --primary-soft: #2a3a66;
+          --secondary: #eef0f5;
+          --secondary-foreground: #1a2547;
+          --muted: #eff1f5;
+          --muted-foreground: #6b7280;
+          --accent: #4a7bb8;
+          --accent-foreground: #fafbfc;
+          --destructive: #c2410c;
+          --destructive-foreground: #fafbfc;
+          --success: #16a34a;
+          --success-foreground: #fafbfc;
+          --warning: #d97706;
+          --border: #d9dde5;
+          --input: #d9dde5;
+          --ring: #4a7bb8;
+          --chart-1: #1a2547;
+          --chart-2: #4a7bb8;
+          --chart-3: #16a34a;
+          --chart-4: #d97706;
+          --chart-5: #c2410c;
+          --sidebar: #1a2547;
+          --sidebar-foreground: #e4e7ee;
+          --sidebar-primary: #4a7bb8;
+          --sidebar-primary-foreground: #fafbfc;
+          --sidebar-accent: #243156;
+          --sidebar-accent-foreground: #fafbfc;
+          --sidebar-border: #243156;
+          --sidebar-ring: #4a7bb8;
+          --gradient-primary: linear-gradient(135deg, #1a2547, #2a3a66);
+          --gradient-accent: linear-gradient(135deg, #2a3a66, #4a7bb8);
+          --shadow-elegant: 0 10px 30px -12px rgba(26,37,71,0.35);
+          --shadow-soft: 0 4px 16px -6px rgba(26,37,71,0.18);
+        }
+      `;
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
+        onclone: (clonedDoc) => {
+          const style = clonedDoc.createElement("style");
+          style.textContent = PDF_TOKENS_CSS;
+          clonedDoc.head.appendChild(style);
+        },
       });
 
       const imgData = canvas.toDataURL("image/png");
