@@ -137,7 +137,7 @@ function ReportPage() {
       // para rgb usando o parser nativo do canvas, que devolve a forma
       // serializada compatível com html2canvas.
       const MODERN_RE = /oklch\(|oklab\(|color-mix\(|lab\(|lch\(/i;
-      const probe = clonedDocProbeCanvas();
+      const probe = document.createElement("canvas").getContext("2d")!;
       const toSafeColor = (value: string, fallback: string): string => {
         if (!value || value === "none" || value === "transparent") return value;
         if (!MODERN_RE.test(value)) return value;
