@@ -133,6 +133,50 @@ function ReportPage() {
         }
       `;
 
+      // Normaliza qualquer cor CSS moderna (oklch/oklab/color-mix/lab/lch)
+      // para rgb usando o parser nativo do canvas, que devolve a forma
+      // serializada compatível com html2canvas.
+      const MODERN_RE = /oklch\(|oklab\(|color-mix\(|lab\(|lch\(/i;
+      const probe = document.createElement("canvas").getContext("2d")!;
+      const toSafeColor = (value: string, fallback: string): string => {
+        if (!value || value === "none" || value === "transparent") return value;
+        if (!MODERN_RE.test(value)) return value;
+        try {
+          probe.fillStyle = "#000";
+          probe.fillStyle = value;
+          const out = probe.fillStyle as string;
+          return MODERN_RE.test(out) ? fallback : out;
+        } catch {
+          return fallback;
+        }
+      };
+      const sanitizeShadow = (value: string, fallback: string): string => {
+        if (!value || value === "none") return value;
+        if (!MODERN_RE.test(value)) return value;
+        // Substitui cada função moderna pelo fallback opaco
+        const replaced = value.replace(
+          /(oklch|oklab|lab|lch|color-mix)\([^()]*(?:\([^()]*\)[^()]*)*\)/gi,
+          fallback,
+        );
+        return MODERN_RE.test(replaced) ? fallback : replaced;
+      };
+
+      const COLOR_PROPS: Array<keyof CSSStyleDeclaration> = [
+        "color",
+        "backgroundColor",
+        "borderColor",
+        "borderTopColor",
+        "borderRightColor",
+        "borderBottomColor",
+        "borderLeftColor",
+        "outlineColor",
+        "textDecorationColor",
+        "fill",
+        "stroke",
+        "caretColor",
+        "columnRuleColor",
+      ];
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
@@ -142,6 +186,31 @@ function ReportPage() {
           const style = clonedDoc.createElement("style");
           style.textContent = PDF_TOKENS_CSS;
           clonedDoc.head.appendChild(style);
+
+          const sanitize = (el: Element) => {
+            if (!(el instanceof HTMLElement) && !(el instanceof SVGElement)) return;
+            const cs = clonedDoc.defaultView?.getComputedStyle(el);
+            if (!cs) return;
+            for (const prop of COLOR_PROPS) {
+              const raw = cs.getPropertyValue(prop as string);
+              if (raw && MODERN_RE.test(raw)) {
+                const fallback = prop === "color" ? "#1a1f3a" : "transparent";
+                (el.style as any)[prop] = toSafeColor(raw, fallback);
+              }
+            }
+            const bg = cs.backgroundImage;
+            if (bg && MODERN_RE.test(bg)) {
+              el.style.backgroundImage = sanitizeShadow(bg, "none");
+            }
+            const sh = cs.boxShadow;
+            if (sh && MODERN_RE.test(sh)) {
+              el.style.boxShadow = sanitizeShadow(sh, "0 4px 16px rgba(26,37,71,0.18)");
+            }
+          };
+
+          sanitize(clonedDoc.documentElement);
+          sanitize(clonedDoc.body);
+          clonedDoc.querySelectorAll("*").forEach(sanitize);
         },
       });
 
