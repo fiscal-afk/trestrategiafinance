@@ -95,9 +95,10 @@ function ReportPage() {
           <p className="mt-4 text-primary-foreground/80">Competência: <strong className="text-primary-foreground">{competenciaRange(relatorio.competencia)}</strong></p>
         </header>
 
-        <div className="p-8 lg:p-12 space-y-10">
+        <div className="p-8 lg:p-12 space-y-10 print-flow">
           {/* Indicadores */}
-          <section>
+          <section className="print-order-1">
+
             <h2 className="font-display text-2xl text-primary mb-4">Indicadores Financeiros</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <Metric label="Faturamento Mensal" value={brl(relatorio.faturamento_mensal)} />
