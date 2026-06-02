@@ -95,9 +95,10 @@ function ReportPage() {
           <p className="mt-4 text-primary-foreground/80">Competência: <strong className="text-primary-foreground">{competenciaRange(relatorio.competencia)}</strong></p>
         </header>
 
-        <div className="p-8 lg:p-12 space-y-10">
+        <div className="p-8 lg:p-12 space-y-10 print-flow">
           {/* Indicadores */}
-          <section>
+          <section className="print-order-1">
+
             <h2 className="font-display text-2xl text-primary mb-4">Indicadores Financeiros</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <Metric label="Faturamento Mensal" value={brl(relatorio.faturamento_mensal)} />
@@ -108,7 +109,7 @@ function ReportPage() {
           </section>
 
           {/* Faturamento Anual × Mensal — Pizza premium */}
-          <section>
+          <section className="print-order-3 print-page-break-before">
             <h2 className="font-display text-2xl text-primary mb-1">Faturamento Anual × Mensal</h2>
             <p className="text-sm text-muted-foreground mb-4">Distribuição analítica do período</p>
             <Card style={{ boxShadow: "var(--shadow-soft)" }}>
@@ -166,7 +167,7 @@ function ReportPage() {
 
           {/* Comparação Mensal — Bar Chart */}
           {fmAnt != null && (
-            <section>
+            <section className="print-order-4">
               <h2 className="font-display text-2xl text-primary mb-1">Comparação Mensal</h2>
               <p className="text-sm text-muted-foreground mb-4">Evolução do faturamento entre competências</p>
               <Card style={{ boxShadow: "var(--shadow-soft)" }}>
@@ -204,7 +205,7 @@ function ReportPage() {
           )}
 
           {/* Frase do mês */}
-          <section className="rounded-xl p-8 text-center" style={{ background: "var(--gradient-accent)" }}>
+          <section className="rounded-xl p-8 text-center print-order-2" style={{ background: "var(--gradient-accent)" }}>
             <p className="font-display text-2xl lg:text-3xl text-primary-foreground leading-snug">
               "{config.frase_mes}"
             </p>
