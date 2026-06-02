@@ -1,11 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { ArrowLeft, Download, TrendingUp, TrendingDown, MessageCircle, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, TrendingUp, TrendingDown, MessageCircle, ExternalLink } from "lucide-react";
 import { brl, pct, ptDate, competenciaRange, monthLabel } from "@/lib/format";
 import {
   ResponsiveContainer,
@@ -24,7 +22,7 @@ function ReportPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
 
-  const [loadingPdf, setLoadingPdf] = useState(false);
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["relatorio", id],
@@ -73,178 +71,10 @@ function ReportPage() {
     ? ((faturamentoMensal - fmAnt) / fmAnt) * 100
     : 0;
 
-  async function baixarPDF() {
-    try {
-      setLoadingPdf(true);
-      const element = document.getElementById("report-container");
-      if (!element) {
-        toast.error("Container do relatório não encontrado");
-        return;
-      }
-      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-        import("html2canvas"),
-        import("jspdf"),
-      ]);
-
-      // Substitui tokens oklch() por rgb/hex equivalentes no clone usado
-      // pelo html2canvas (que não suporta oklch). Mantém aparência idêntica.
-      const PDF_TOKENS_CSS = `
-        :root, .dark {
-          --background: #f7f8fa;
-          --foreground: #1a1f3a;
-          --card: #ffffff;
-          --card-foreground: #1a1f3a;
-          --popover: #ffffff;
-          --popover-foreground: #1a1f3a;
-          --primary: #1a2547;
-          --primary-foreground: #f7f8fa;
-          --primary-soft: #2a3a66;
-          --secondary: #eef0f5;
-          --secondary-foreground: #1a2547;
-          --muted: #eff1f5;
-          --muted-foreground: #6b7280;
-          --accent: #4a7bb8;
-          --accent-foreground: #fafbfc;
-          --destructive: #c2410c;
-          --destructive-foreground: #fafbfc;
-          --success: #16a34a;
-          --success-foreground: #fafbfc;
-          --warning: #d97706;
-          --border: #d9dde5;
-          --input: #d9dde5;
-          --ring: #4a7bb8;
-          --chart-1: #1a2547;
-          --chart-2: #4a7bb8;
-          --chart-3: #16a34a;
-          --chart-4: #d97706;
-          --chart-5: #c2410c;
-          --sidebar: #1a2547;
-          --sidebar-foreground: #e4e7ee;
-          --sidebar-primary: #4a7bb8;
-          --sidebar-primary-foreground: #fafbfc;
-          --sidebar-accent: #243156;
-          --sidebar-accent-foreground: #fafbfc;
-          --sidebar-border: #243156;
-          --sidebar-ring: #4a7bb8;
-          --gradient-primary: linear-gradient(135deg, #1a2547, #2a3a66);
-          --gradient-accent: linear-gradient(135deg, #2a3a66, #4a7bb8);
-          --shadow-elegant: 0 10px 30px -12px rgba(26,37,71,0.35);
-          --shadow-soft: 0 4px 16px -6px rgba(26,37,71,0.18);
-        }
-      `;
-
-      // Normaliza qualquer cor CSS moderna (oklch/oklab/color-mix/lab/lch)
-      // para rgb usando o parser nativo do canvas, que devolve a forma
-      // serializada compatível com html2canvas.
-      const MODERN_RE = /oklch\(|oklab\(|color-mix\(|lab\(|lch\(/i;
-      const probe = document.createElement("canvas").getContext("2d")!;
-      const toSafeColor = (value: string, fallback: string): string => {
-        if (!value || value === "none" || value === "transparent") return value;
-        if (!MODERN_RE.test(value)) return value;
-        try {
-          probe.fillStyle = "#000";
-          probe.fillStyle = value;
-          const out = probe.fillStyle as string;
-          return MODERN_RE.test(out) ? fallback : out;
-        } catch {
-          return fallback;
-        }
-      };
-      const sanitizeShadow = (value: string, fallback: string): string => {
-        if (!value || value === "none") return value;
-        if (!MODERN_RE.test(value)) return value;
-        // Substitui cada função moderna pelo fallback opaco
-        const replaced = value.replace(
-          /(oklch|oklab|lab|lch|color-mix)\([^()]*(?:\([^()]*\)[^()]*)*\)/gi,
-          fallback,
-        );
-        return MODERN_RE.test(replaced) ? fallback : replaced;
-      };
-
-      const COLOR_PROPS: Array<keyof CSSStyleDeclaration> = [
-        "color",
-        "backgroundColor",
-        "borderColor",
-        "borderTopColor",
-        "borderRightColor",
-        "borderBottomColor",
-        "borderLeftColor",
-        "outlineColor",
-        "textDecorationColor",
-        "fill",
-        "stroke",
-        "caretColor",
-        "columnRuleColor",
-      ];
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-        onclone: (clonedDoc) => {
-          const style = clonedDoc.createElement("style");
-          style.textContent = PDF_TOKENS_CSS;
-          clonedDoc.head.appendChild(style);
-
-          const sanitize = (el: Element) => {
-            if (!(el instanceof HTMLElement) && !(el instanceof SVGElement)) return;
-            const cs = clonedDoc.defaultView?.getComputedStyle(el);
-            if (!cs) return;
-            for (const prop of COLOR_PROPS) {
-              const raw = cs.getPropertyValue(prop as string);
-              if (raw && MODERN_RE.test(raw)) {
-                const fallback = prop === "color" ? "#1a1f3a" : "transparent";
-                (el.style as any)[prop] = toSafeColor(raw, fallback);
-              }
-            }
-            const bg = cs.backgroundImage;
-            if (bg && MODERN_RE.test(bg)) {
-              el.style.backgroundImage = sanitizeShadow(bg, "none");
-            }
-            const sh = cs.boxShadow;
-            if (sh && MODERN_RE.test(sh)) {
-              el.style.boxShadow = sanitizeShadow(sh, "0 4px 16px rgba(26,37,71,0.18)");
-            }
-          };
-
-          sanitize(clonedDoc.documentElement);
-          sanitize(clonedDoc.body);
-          clonedDoc.querySelectorAll("*").forEach(sanitize);
-        },
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      const empresa = (relatorio.empresas.nome_fantasia || relatorio.empresas.razao_social || "relatorio")
-        .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      pdf.save(`relatorio-${empresa}-${relatorio.competencia}.pdf`);
-      toast.success("PDF gerado com sucesso");
-    } catch (error) {
-      console.error("PDF ERROR:", error);
-      toast.error("Erro ao gerar PDF", { description: (error as Error).message });
-    } finally {
-      setLoadingPdf(false);
-    }
+  function imprimirRelatorio() {
+    window.print();
   }
+
 
   return (
     <div className="space-y-6">
@@ -252,13 +82,13 @@ function ReportPage() {
         <Button variant="ghost" onClick={() => navigate({ to: "/dashboard" })}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
         </Button>
-        <Button onClick={baixarPDF} disabled={loadingPdf}>
-          {loadingPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-          {loadingPdf ? "Gerando PDF…" : "Baixar PDF"}
+        <Button onClick={imprimirRelatorio}>
+          <Download className="h-4 w-4 mr-2" />
+          Imprimir / Salvar PDF
         </Button>
       </div>
 
-      <article id="report-container" className="bg-card rounded-2xl overflow-hidden border" style={{ boxShadow: "var(--shadow-elegant)" }}>
+      <article id="relatorio-print" className="bg-card rounded-2xl overflow-hidden border" style={{ boxShadow: "var(--shadow-elegant)" }}>
         <header className="p-8 lg:p-12 text-primary-foreground" style={{ background: "var(--gradient-primary)" }}>
           <p className="text-xs uppercase tracking-[0.25em] opacity-70">TR Estratégia Empresarial</p>
           <h1 className="font-display text-3xl lg:text-5xl mt-3">{relatorio.empresas.nome_fantasia || relatorio.empresas.razao_social}</h1>

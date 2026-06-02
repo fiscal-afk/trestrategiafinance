@@ -160,6 +160,47 @@
 }
 
 @media print {
-  .no-print { display: none !important; }
-  body { background: white !important; }
+  body * {
+    visibility: hidden;
+  }
+
+  #relatorio-print,
+  #relatorio-print * {
+    visibility: visible;
+  }
+
+  #relatorio-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  .no-print,
+  [data-sidebar],
+  nav,
+  aside,
+  header.app-header {
+    display: none !important;
+  }
+
+  .print-break-inside-avoid,
+  #relatorio-print section,
+  #relatorio-print article,
+  #relatorio-print table,
+  #relatorio-print .card,
+  #relatorio-print [class*="rounded"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
 }
