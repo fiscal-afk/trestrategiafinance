@@ -109,7 +109,7 @@ function ReportPage() {
           </section>
 
           {/* Faturamento Anual × Mensal — Pizza premium */}
-          <section className="print-page-break-before">
+          <section className="print-order-3 print-page-break-before">
             <h2 className="font-display text-2xl text-primary mb-1">Faturamento Anual × Mensal</h2>
             <p className="text-sm text-muted-foreground mb-4">Distribuição analítica do período</p>
             <Card style={{ boxShadow: "var(--shadow-soft)" }}>
