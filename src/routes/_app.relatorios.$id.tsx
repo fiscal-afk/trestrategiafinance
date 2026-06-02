@@ -90,7 +90,7 @@ function ReportPage() {
         </Button>
       </div>
 
-      <article id="report-container" className="bg-card rounded-2xl overflow-hidden border" style={{ boxShadow: "var(--shadow-elegant)" }}>
+      <article id="relatorio-print" className="bg-card rounded-2xl overflow-hidden border" style={{ boxShadow: "var(--shadow-elegant)" }}>
         <header className="p-8 lg:p-12 text-primary-foreground" style={{ background: "var(--gradient-primary)" }}>
           <p className="text-xs uppercase tracking-[0.25em] opacity-70">TR Estratégia Empresarial</p>
           <h1 className="font-display text-3xl lg:text-5xl mt-3">{relatorio.empresas.nome_fantasia || relatorio.empresas.razao_social}</h1>
