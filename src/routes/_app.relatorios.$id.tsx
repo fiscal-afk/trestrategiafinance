@@ -1,11 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { ArrowLeft, Download, TrendingUp, TrendingDown, MessageCircle, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, TrendingUp, TrendingDown, MessageCircle, ExternalLink } from "lucide-react";
 import { brl, pct, ptDate, competenciaRange, monthLabel } from "@/lib/format";
 import {
   ResponsiveContainer,
