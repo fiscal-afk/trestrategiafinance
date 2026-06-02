@@ -167,7 +167,7 @@ function ReportPage() {
 
           {/* Comparação Mensal — Bar Chart */}
           {fmAnt != null && (
-            <section>
+            <section className="print-order-4">
               <h2 className="font-display text-2xl text-primary mb-1">Comparação Mensal</h2>
               <p className="text-sm text-muted-foreground mb-4">Evolução do faturamento entre competências</p>
               <Card style={{ boxShadow: "var(--shadow-soft)" }}>
