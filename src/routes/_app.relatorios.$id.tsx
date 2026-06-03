@@ -217,7 +217,7 @@ function ReportPage() {
             <p className="font-display text-base text-primary">TR Estratégia Empresarial</p>
             {config.logo_tr ? <img src={config.logo_tr} alt="TR" className="h-6 mt-1" /> : null}
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-4 text-sm no-print">
             {config.whatsapp_tr && (
               <a href={`https://wa.me/${config.whatsapp_tr.replace(/\D/g, "")}`} target="_blank" rel="noreferrer"
                  className="inline-flex items-center gap-1.5 text-accent hover:underline">
