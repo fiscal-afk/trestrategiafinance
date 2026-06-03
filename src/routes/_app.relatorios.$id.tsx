@@ -154,7 +154,7 @@ function ReportPage() {
                       <p className="text-xs uppercase tracking-wider text-muted-foreground">Percentual</p>
                       <p className="font-display text-2xl text-accent mt-1">{pct(percentual)}</p>
                     </div>
-                    <div className="pt-4 border-t text-sm text-muted-foreground leading-relaxed">
+                    <div className="pt-4 border-t text-sm text-muted-foreground leading-relaxed no-print">
                       A receita mensal representa{" "}
                       <strong className="text-foreground">{pct(percentual)}</strong>{" "}
                       do faturamento anual acumulado no período analisado.
