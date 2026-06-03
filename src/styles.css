@@ -209,8 +209,8 @@
 
   /* Compact body container */
   #relatorio-print > div {
-    padding: 12px 20px !important;
-    gap: 10px !important;
+    padding: 8px 20px !important;
+    gap: 6px !important;
     display: flex !important;
     flex-direction: column !important;
   }
@@ -241,11 +241,11 @@
   #relatorio-print .recharts-responsive-container,
   #relatorio-print .recharts-wrapper {
     width: 100% !important;
-    height: 180px !important;
+    height: 155px !important;
   }
   #relatorio-print [class*="h-[340px]"],
   #relatorio-print [class*="h-[320px]"] {
-    height: 180px !important;
+    height: 155px !important;
   }
 
   /* Card content padding */
@@ -275,3 +275,20 @@
   }
 }
 
+
+@media print {
+  #relatorio-print .grid.lg\:grid-cols-2 {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 20px !important;
+  }
+  #relatorio-print .grid.sm\:grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+  }
+  #relatorio-print .space-y-4 > div {
+    margin-top: 4px !important;
+  }
+  #relatorio-print .pt-4.border-t {
+    display: none !important; /* Hide the textual explanation in print to save space */
+  }
+}
