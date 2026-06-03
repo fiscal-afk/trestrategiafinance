@@ -160,18 +160,11 @@
 }
 
 @media print {
-  /* Reorder sections for print: indicadores -> frase (conclusão) -> [page break] -> pizza -> bar */
-  .print-flow {
-    display: flex !important;
-    flex-direction: column !important;
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
   }
-  .print-order-1 { order: 1 !important; }
-  .print-order-2 { order: 2 !important; }
-  .print-order-3 { order: 3 !important; }
-  .print-order-4 { order: 4 !important; }
-  .print-order-5 { order: 5 !important; }
 
-  /* Preserve colors, gradients, shadows */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -184,13 +177,11 @@
     padding: 0 !important;
   }
 
-  body * {
-    visibility: hidden;
-  }
+  body * { visibility: hidden; }
+  #relatorio-print, #relatorio-print * { visibility: visible; }
 
-  #relatorio-print,
-  #relatorio-print * {
-    visibility: visible;
+  .no-print, [data-sidebar], nav, aside, header.app-header {
+    display: none !important;
   }
 
   #relatorio-print {
@@ -200,43 +191,87 @@
     width: 100%;
     border: none !important;
     border-radius: 0 !important;
+    box-shadow: none !important;
+    font-size: 10pt;
   }
 
-  .no-print,
-  [data-sidebar],
-  nav,
-  aside,
-  header.app-header {
-    display: none !important;
+  /* Compact header */
+  #relatorio-print > header {
+    padding: 14px 20px !important;
+  }
+  #relatorio-print > header h1 {
+    font-size: 22pt !important;
+    margin-top: 4px !important;
+  }
+  #relatorio-print > header p {
+    margin-top: 4px !important;
   }
 
-  /* Avoid splitting key blocks across pages */
+  /* Compact body container */
+  #relatorio-print > div {
+    padding: 12px 20px !important;
+    gap: 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  #relatorio-print > div > section {
+    margin: 0 !important;
+  }
+
+  /* Section titles tighter */
+  #relatorio-print h2 {
+    font-size: 13pt !important;
+    margin-bottom: 4px !important;
+  }
+  #relatorio-print section > p {
+    margin-bottom: 6px !important;
+    font-size: 9pt !important;
+  }
+
+  /* Cards / indicators */
+  #relatorio-print .rounded-xl,
+  #relatorio-print .rounded-2xl {
+    padding: 8px 10px !important;
+  }
+  #relatorio-print .font-display.text-2xl {
+    font-size: 13pt !important;
+  }
+
+  /* Chart sizing — fit two charts on single page */
+  #relatorio-print .recharts-responsive-container,
+  #relatorio-print .recharts-wrapper {
+    width: 100% !important;
+    height: 180px !important;
+  }
+  #relatorio-print [class*="h-[340px]"],
+  #relatorio-print [class*="h-[320px]"] {
+    height: 180px !important;
+  }
+
+  /* Card content padding */
+  #relatorio-print [class*="pt-6"] {
+    padding-top: 8px !important;
+  }
+
+  /* Footer slim */
+  #relatorio-print > footer {
+    padding: 8px 20px !important;
+  }
+
+  /* Avoid splitting */
   #relatorio-print section,
-  #relatorio-print .print-break-inside-avoid,
-  #relatorio-print .recharts-wrapper,
-  #relatorio-print .recharts-responsive-container {
+  #relatorio-print .recharts-wrapper {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
 
-  /* Explicit page breaks */
-  .print-page-break-before {
-    break-before: page !important;
-    page-break-before: always !important;
-  }
+  /* Force single page — no breaks */
+  .print-page-break-before,
   .print-page-break-after {
-    break-after: page !important;
-    page-break-after: always !important;
-  }
-
-  /* Fixed chart size for print fidelity */
-  #relatorio-print .recharts-responsive-container {
-    width: 100% !important;
-    height: 300px !important;
-  }
-
-  @page {
-    size: A4;
-    margin: 12mm;
+    break-before: auto !important;
+    break-after: auto !important;
+    page-break-before: auto !important;
+    page-break-after: auto !important;
   }
 }
+
