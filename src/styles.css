@@ -211,7 +211,7 @@
 
   /* Compact body container */
   #relatorio-print > div {
-    padding: 8px 20px !important;
+    padding: 8px 16px !important;
     gap: 6px !important;
     display: flex !important;
     flex-direction: column !important;
@@ -222,21 +222,21 @@
 
   /* Section titles tighter */
   #relatorio-print h2 {
-    font-size: 13pt !important;
-    margin-bottom: 4px !important;
+    font-size: 12pt !important;
+    margin-bottom: 3px !important;
   }
   #relatorio-print section > p {
-    margin-bottom: 6px !important;
-    font-size: 9pt !important;
+    margin-bottom: 4px !important;
+    font-size: 8.5pt !important;
   }
 
   /* Cards / indicators */
   #relatorio-print .rounded-xl,
   #relatorio-print .rounded-2xl {
-    padding: 8px 10px !important;
+    padding: 6px 8px !important;
   }
   #relatorio-print .font-display.text-2xl {
-    font-size: 13pt !important;
+    font-size: 11.5pt !important;
   }
 
   /* Chart sizing — fit two charts on single page */
