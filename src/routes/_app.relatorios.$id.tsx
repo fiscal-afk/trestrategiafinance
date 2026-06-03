@@ -109,11 +109,11 @@ function ReportPage() {
           </section>
 
           {/* Faturamento Anual × Mensal — Pizza premium */}
-          <section className="print-order-3 print-page-break-before">
+          <section className="print-order-3">
             <h2 className="font-display text-2xl text-primary mb-1">Faturamento Anual × Mensal</h2>
             <p className="text-sm text-muted-foreground mb-4">Distribuição analítica do período</p>
             <Card style={{ boxShadow: "var(--shadow-soft)" }}>
-              <CardContent className="pt-6">
+              <CardContent className="pt-6 print-compact">
                 <div className="grid lg:grid-cols-2 gap-8 items-center">
                   <div className="h-[340px]">
                     <ResponsiveContainer width="100%" height="100%">
@@ -154,7 +154,7 @@ function ReportPage() {
                       <p className="text-xs uppercase tracking-wider text-muted-foreground">Percentual</p>
                       <p className="font-display text-2xl text-accent mt-1">{pct(percentual)}</p>
                     </div>
-                    <div className="pt-4 border-t text-sm text-muted-foreground leading-relaxed">
+                    <div className="pt-4 border-t text-sm text-muted-foreground leading-relaxed no-print">
                       A receita mensal representa{" "}
                       <strong className="text-foreground">{pct(percentual)}</strong>{" "}
                       do faturamento anual acumulado no período analisado.
@@ -194,7 +194,7 @@ function ReportPage() {
                       {cresc >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                       {cresc >= 0 ? "+" : ""}{pct(cresc)}
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground print-hide-extra">
                       Comparado a {prevMonthName} ({brl(fmAnt)}) e {currMonthName} ({brl(faturamentoMensal)}),
                       o faturamento apresentou {cresc >= 0 ? "crescimento" : "redução"} de <strong>{pct(Math.abs(cresc))}</strong>.
                     </p>
@@ -205,7 +205,7 @@ function ReportPage() {
           )}
 
           {/* Frase do mês */}
-          <section className="rounded-xl p-8 text-center print-order-2" style={{ background: "var(--gradient-accent)" }}>
+          <section className="rounded-xl p-8 text-center print-order-2 no-print" style={{ background: "var(--gradient-accent)" }}>
             <p className="font-display text-2xl lg:text-3xl text-primary-foreground leading-snug">
               "{config.frase_mes}"
             </p>
@@ -217,7 +217,7 @@ function ReportPage() {
             <p className="font-display text-base text-primary">TR Estratégia Empresarial</p>
             {config.logo_tr ? <img src={config.logo_tr} alt="TR" className="h-6 mt-1" /> : null}
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-4 text-sm no-print">
             {config.whatsapp_tr && (
               <a href={`https://wa.me/${config.whatsapp_tr.replace(/\D/g, "")}`} target="_blank" rel="noreferrer"
                  className="inline-flex items-center gap-1.5 text-accent hover:underline">
