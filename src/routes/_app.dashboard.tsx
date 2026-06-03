@@ -181,7 +181,7 @@ function DashboardPage() {
                   </li>
                 );
               })}
-              {(!data?.relatorios || data.relatorios.length === 0) && (
+              {relatoriosCompetencia.length === 0 && (
                 <li className="py-6 text-sm text-muted-foreground text-center">
                   Nenhum relatório gerado ainda. <Link to="/upload" className="text-accent underline">Enviar PGDAS</Link>
                 </li>
