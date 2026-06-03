@@ -191,10 +191,10 @@ function UploadPage() {
       // Cria tarefa automática e classifica
       const fatNum = Number(ext.faturamento_mensal ?? 0);
       const impNum = Number(ext.imposto ?? 0);
-      const possuiImposto = fatNum > 0 && impNum > 0;
-      const classificacao = possuiImposto ? "com_imposto" : (fatNum === 0 && impNum === 0 ? "sem_imposto" : "sem_imposto");
+      const possuiImposto = impNum > 0;
+      const classificacao = possuiImposto ? "com_imposto" : "sem_imposto";
       const titulo = `${matchedEmpresa.nome_fantasia || matchedEmpresa.razao_social} — ${ext.competencia ?? ""}`;
-      await (supabase as any).from("tarefas").insert({
+      const { data: tarefaCriada, error: tarefaError } = await (supabase as any).from("tarefas").insert({
         empresa_id,
         relatorio_id: rel.id,
         competencia: ext.competencia ?? new Date().toISOString().slice(0, 10),
@@ -205,7 +205,16 @@ function UploadPage() {
         faturamento: fatNum,
         valor_imposto: impNum,
         status: "pendente",
-      });
+      }).select("id").single();
+      if (tarefaError) throw tarefaError;
+
+      await (supabase as any).from("checklist_tarefa").insert(
+        ["das", "declaracao", "recibo"].map((tipo) => ({
+          tarefa_id: tarefaCriada.id,
+          tipo,
+          concluido: uploads.some((u) => u.tipo === tipo),
+        })),
+      );
 
       return rel.id as string;
     },

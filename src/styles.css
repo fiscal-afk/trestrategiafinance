@@ -162,7 +162,7 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm;
+    margin: 6mm;
   }
 
   * {
@@ -192,15 +192,17 @@
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    font-size: 10pt;
+    font-size: 9pt;
+    transform: scale(0.97);
+    transform-origin: top center;
   }
 
   /* Compact header */
   #relatorio-print > header {
-    padding: 14px 20px !important;
+    padding: 12px 16px !important;
   }
   #relatorio-print > header h1 {
-    font-size: 22pt !important;
+    font-size: 18pt !important;
     margin-top: 4px !important;
   }
   #relatorio-print > header p {
@@ -209,8 +211,8 @@
 
   /* Compact body container */
   #relatorio-print > div {
-    padding: 12px 20px !important;
-    gap: 10px !important;
+    padding: 8px 16px !important;
+    gap: 6px !important;
     display: flex !important;
     flex-direction: column !important;
   }
@@ -220,42 +222,42 @@
 
   /* Section titles tighter */
   #relatorio-print h2 {
-    font-size: 13pt !important;
-    margin-bottom: 4px !important;
+    font-size: 12pt !important;
+    margin-bottom: 3px !important;
   }
   #relatorio-print section > p {
-    margin-bottom: 6px !important;
-    font-size: 9pt !important;
+    margin-bottom: 4px !important;
+    font-size: 8.5pt !important;
   }
 
   /* Cards / indicators */
   #relatorio-print .rounded-xl,
   #relatorio-print .rounded-2xl {
-    padding: 8px 10px !important;
+    padding: 6px 8px !important;
   }
   #relatorio-print .font-display.text-2xl {
-    font-size: 13pt !important;
+    font-size: 11.5pt !important;
   }
 
   /* Chart sizing — fit two charts on single page */
   #relatorio-print .recharts-responsive-container,
   #relatorio-print .recharts-wrapper {
     width: 100% !important;
-    height: 180px !important;
+    height: 160px !important;
   }
   #relatorio-print [class*="h-[340px]"],
   #relatorio-print [class*="h-[320px]"] {
-    height: 180px !important;
+    height: 160px !important;
   }
 
   /* Card content padding */
   #relatorio-print [class*="pt-6"] {
-    padding-top: 8px !important;
+    padding-top: 6px !important;
   }
 
   /* Footer slim */
   #relatorio-print > footer {
-    padding: 8px 20px !important;
+    padding: 8px 16px !important;
   }
 
   /* Avoid splitting */
@@ -275,3 +277,40 @@
   }
 }
 
+
+@media print {
+  #relatorio-print .grid.lg\:grid-cols-2,
+  #relatorio-print .lg\:grid-cols-\[minmax\(0\,1\.15fr\)_minmax\(260px\,0\.85fr\)\] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+  #relatorio-print .grid.sm\:grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+  }
+  #relatorio-print .space-y-3 > div,
+  #relatorio-print .space-y-4 > div {
+    margin-top: 4px !important;
+  }
+}
+
+@media print {
+  .print-order-1 { order: 1 !important; }
+  .print-order-2 { order: 2 !important; }
+  .print-order-3 { order: 3 !important; }
+  .print-order-4 { order: 4 !important; }
+}
+
+@media print {
+  #relatorio-print .mt-4 { margin-top: 8px !important; }
+  #relatorio-print .mb-4 { margin-bottom: 4px !important; }
+  #relatorio-print .p-8 { padding: 10px !important; }
+  #relatorio-print .lg\:p-12 { padding: 10px !important; }
+  #relatorio-print .p-6,
+  #relatorio-print .lg\:p-8 { padding: 8px !important; }
+  #relatorio-print .space-y-10,
+  #relatorio-print .space-y-6 { gap: 6px !important; }
+  #relatorio-print .space-y-10 > * + *,
+  #relatorio-print .space-y-6 > * + * { margin-top: 6px !important; }
+  #relatorio-print .pt-5 { padding-top: 6px !important; }
+}
