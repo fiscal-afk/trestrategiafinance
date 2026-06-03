@@ -162,7 +162,7 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm;
+    margin: 6mm;
   }
 
   * {
@@ -192,15 +192,17 @@
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    font-size: 10pt;
+    font-size: 9pt;
+    transform: scale(0.97);
+    transform-origin: top center;
   }
 
   /* Compact header */
   #relatorio-print > header {
-    padding: 14px 20px !important;
+    padding: 12px 16px !important;
   }
   #relatorio-print > header h1 {
-    font-size: 22pt !important;
+    font-size: 18pt !important;
     margin-top: 4px !important;
   }
   #relatorio-print > header p {
