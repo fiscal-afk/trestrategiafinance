@@ -1,14 +1,15 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, TrendingUp, TrendingDown, MessageCircle, ExternalLink } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import { brl, pct, ptDate, competenciaRange, monthLabel } from "@/lib/format";
 import {
   ResponsiveContainer,
   BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip,
-  PieChart, Pie, Cell, Legend,
+  PieChart, Pie, Cell, Legend, LabelList,
 } from "recharts";
 
 export const Route = createFileRoute("/_app/relatorios/$id")({
@@ -21,6 +22,20 @@ const PIE_COLORS = ["#3b6fa0", "#0f1b3d", "#7aa6cf"];
 function ReportPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const [isPrintMode, setIsPrintMode] = useState(false);
+
+  useEffect(() => {
+    const handleBeforePrint = () => setIsPrintMode(true);
+    const handleAfterPrint = () => setIsPrintMode(false);
+
+    window.addEventListener("beforeprint", handleBeforePrint);
+    window.addEventListener("afterprint", handleAfterPrint);
+
+    return () => {
+      window.removeEventListener("beforeprint", handleBeforePrint);
+      window.removeEventListener("afterprint", handleAfterPrint);
+    };
+  }, []);
 
 
 
@@ -70,7 +85,32 @@ function ReportPage() {
     ? ((faturamentoMensal - fmAnt) / fmAnt) * 100
     : 0;
 
-  function imprimirRelatorio() {
+  const renderBarValue = ({ x = 0, y = 0, width = 0, value = 0 }: any) => (
+    <text
+      x={Number(x) + Number(width) / 2}
+      y={Number(y) - 8}
+      textAnchor="middle"
+      fill="#0f1b3d"
+      fontSize={isPrintMode ? 10 : 11}
+      fontWeight={600}
+    >
+      {brl(Number(value))}
+    </text>
+  );
+
+  async function imprimirRelatorio() {
+    setIsPrintMode(true);
+
+    if (typeof document !== "undefined" && "fonts" in document) {
+      await document.fonts.ready.catch(() => undefined);
+    }
+
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => resolve());
+      });
+    });
+
     window.print();
   }
 
