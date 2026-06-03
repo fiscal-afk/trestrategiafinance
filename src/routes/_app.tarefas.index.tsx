@@ -40,9 +40,16 @@ const FILTROS: { id: Filtro; label: string }[] = [
   { id: "sem_info", label: "Sem informação" },
 ];
 
+const competenciaLabel = (value: string) => {
+  const [year, month] = value.slice(0, 7).split("-");
+  const date = new Date(Number(year), Number(month) - 1, 1);
+  return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(date).replace(/^./, (char) => char.toUpperCase());
+};
+
 function TarefasList() {
   const [q, setQ] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("todos");
+  const [competencia, setCompetencia] = useState("todos");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const qc = useQueryClient();
 
@@ -61,6 +68,7 @@ function TarefasList() {
 
   const filtered = (tarefas ?? []).filter((t) => {
     if (filtro !== "todos" && t.classificacao !== filtro) return false;
+    if (competencia !== "todos" && !t.competencia.startsWith(competencia)) return false;
     if (!q) return true;
     const s = q.toLowerCase();
     return (
@@ -69,6 +77,8 @@ function TarefasList() {
       (t.empresas?.nome_fantasia ?? "").toLowerCase().includes(s)
     );
   });
+
+  const competencias = Array.from(new Set((tarefas ?? []).map((t) => t.competencia.slice(0, 7)))).sort((a, b) => b.localeCompare(a));
 
   const counts = {
     todos: tarefas?.length ?? 0,
@@ -80,7 +90,19 @@ function TarefasList() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <Input placeholder="Buscar por empresa ou título…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-md" />
+        <div className="flex items-center gap-3 flex-wrap">
+          <Input placeholder="Buscar por empresa ou título…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-md" />
+          <select
+            value={competencia}
+            onChange={(e) => setCompetencia(e.target.value)}
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          >
+            <option value="todos">Todas as competências</option>
+            {competencias.map((item) => (
+              <option key={item} value={item}>{competenciaLabel(item)}</option>
+            ))}
+          </select>
+        </div>
         <Button asChild>
           <Link to="/tarefas/nova"><Plus className="h-4 w-4 mr-2" /> Nova tarefa</Link>
         </Button>
