@@ -62,8 +62,7 @@ function ReportPage() {
 
   const dadosPizza = [
     { nome: "Receita Mensal", valor: faturamentoMensal },
-    { nome: "Receita Anual", valor: faturamentoAnual },
-    { nome: "Percentual", valor: percentual },
+    { nome: "Receita Restante (Anual)", valor: Math.max(0, faturamentoAnual - faturamentoMensal) },
   ];
 
   // Recalcula crescimento ao vivo — não confia no valor salvo
@@ -125,7 +124,7 @@ function ReportPage() {
                           outerRadius={110}
                           innerRadius={55}
                           paddingAngle={4}
-                          label
+                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                           isAnimationActive={false}
                         >
                           {dadosPizza.map((_, i) => (

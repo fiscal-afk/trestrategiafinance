@@ -292,3 +292,19 @@
     display: none !important; /* Hide the textual explanation in print to save space */
   }
 }
+
+@media print {
+  .print-order-1 { order: 1 !important; }
+  .print-order-2 { order: 2 !important; }
+  .print-order-3 { order: 3 !important; }
+  .print-order-4 { order: 4 !important; }
+}
+
+@media print {
+  #relatorio-print .mt-4 { margin-top: 8px !important; }
+  #relatorio-print .mb-4 { margin-bottom: 4px !important; }
+  #relatorio-print .p-8 { padding: 10px !important; }
+  #relatorio-print .lg\:p-12 { padding: 10px !important; }
+  #relatorio-print .space-y-10 { gap: 8px !important; }
+  #relatorio-print .space-y-10 > * + * { margin-top: 8px !important; }
+}
