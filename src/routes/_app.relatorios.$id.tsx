@@ -194,7 +194,7 @@ function ReportPage() {
                       {cresc >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                       {cresc >= 0 ? "+" : ""}{pct(cresc)}
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground print-hide-extra">
                       Comparado a {prevMonthName} ({brl(fmAnt)}) e {currMonthName} ({brl(faturamentoMensal)}),
                       o faturamento apresentou {cresc >= 0 ? "crescimento" : "redução"} de <strong>{pct(Math.abs(cresc))}</strong>.
                     </p>
