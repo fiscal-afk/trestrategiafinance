@@ -243,21 +243,21 @@
   #relatorio-print .recharts-responsive-container,
   #relatorio-print .recharts-wrapper {
     width: 100% !important;
-    height: 155px !important;
+    height: 160px !important;
   }
   #relatorio-print [class*="h-[340px]"],
   #relatorio-print [class*="h-[320px]"] {
-    height: 155px !important;
+    height: 160px !important;
   }
 
   /* Card content padding */
   #relatorio-print [class*="pt-6"] {
-    padding-top: 8px !important;
+    padding-top: 6px !important;
   }
 
   /* Footer slim */
   #relatorio-print > footer {
-    padding: 8px 20px !important;
+    padding: 8px 16px !important;
   }
 
   /* Avoid splitting */
