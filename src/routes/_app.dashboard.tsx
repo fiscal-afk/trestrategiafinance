@@ -17,7 +17,7 @@ function DashboardPage() {
     queryFn: async () => {
       const [emp, rel] = await Promise.all([
         supabase.from("empresas").select("id, razao_social, nome_fantasia, status, created_at").order("created_at", { ascending: false }),
-        supabase.from("relatorios").select("id, empresa_id, competencia, faturamento_mensal, imposto, status, created_at, empresas(razao_social, nome_fantasia)").order("competencia", { ascending: false }),
+        supabase.from("relatorios").select("id, empresa_id, competencia, faturamento_mensal, imposto, aliquota, status, created_at, empresas(razao_social, nome_fantasia)").order("competencia", { ascending: false }),
       ]);
       const empresas = emp.data ?? [];
       const relatorios = rel.data ?? [];
