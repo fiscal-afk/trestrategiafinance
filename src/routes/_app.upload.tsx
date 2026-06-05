@@ -126,12 +126,18 @@ function UploadPage() {
       }
 
       const ext = pgdasParsed.fields;
+      // Se houver guia DAS com data extraída, ela tem prioridade sobre o cálculo padrão
+      const dasFile = files.find((f) => f.docType === "das" && f.dasVencimento);
+      const vencimentoFinal = dasFile?.dasVencimento ?? ext.vencimento ?? null;
       for (const log of ext.logs) {
         console.info(`[PGDAS] ${log.campo}`, {
           original: log.original,
           convertido: log.convertido,
           salvo: log.salvo,
         });
+      }
+      if (dasFile?.dasVencimento) {
+        console.info(`[DAS] vencimento extraído da guia: ${dasFile.dasVencimento}`);
       }
 
       // Create relatório
@@ -144,7 +150,7 @@ function UploadPage() {
           faturamento_anual: ext.faturamento_anual ?? 0,
           imposto: ext.imposto ?? 0,
           aliquota: ext.aliquota ?? 0,
-          vencimento: ext.vencimento,
+          vencimento: vencimentoFinal,
           competencia_anterior: ext.competencia_anterior,
           faturamento_mes_anterior: ext.faturamento_mes_anterior,
           status: "concluido",
