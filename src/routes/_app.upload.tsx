@@ -31,6 +31,7 @@ type ParsedFile = {
   docType?: DocType;
   cnpj?: string | null;
   fields?: PgdasFields;
+  dasVencimento?: string | null;
   error?: string;
 };
 
