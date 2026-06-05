@@ -212,6 +212,21 @@ function TarefaRow({
     onError: (e: any) => toast.error("Erro", { description: e.message }),
   });
 
+  const marcarEnviado = useMutation({
+    mutationFn: async ({ id, enviado }: { id: string; enviado: boolean }) => {
+      const { error } = await (supabase as any)
+        .from("tarefas")
+        .update({ enviado_ao_cliente: enviado, enviado_em: enviado ? new Date().toISOString() : null })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      onChange();
+      toast.success("Tarefa atualizada");
+    },
+    onError: (e: any) => toast.error("Erro", { description: e.message }),
+  });
+
   return (
     <Card>
       <CardContent className="p-0">
