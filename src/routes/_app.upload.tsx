@@ -82,9 +82,10 @@ function UploadPage() {
         const docType = detectDocType(text);
         const cnpj = extractCnpj(text);
         const fields = docType === "pgdas" ? extractPgdasFields(text) : undefined;
+        const dasVencimento = docType === "das" ? extractDasVencimento(text) : null;
         setFiles((prev) =>
           prev.map((p) =>
-            p.id === item.id ? { ...p, status: "ready", docType, cnpj: fields?.cnpj ?? cnpj, fields } : p,
+            p.id === item.id ? { ...p, status: "ready", docType, cnpj: fields?.cnpj ?? cnpj, fields, dasVencimento } : p,
           ),
         );
       } catch (err) {
