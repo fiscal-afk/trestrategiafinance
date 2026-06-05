@@ -52,6 +52,7 @@ function TarefasList() {
   const [q, setQ] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("todos");
   const [competencia, setCompetencia] = useState("todos");
+  const [empresaFiltro, setEmpresaFiltro] = useState("todos");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const qc = useQueryClient();
 
@@ -71,6 +72,7 @@ function TarefasList() {
   const filtered = (tarefas ?? []).filter((t) => {
     if (filtro !== "todos" && t.classificacao !== filtro) return false;
     if (competencia !== "todos" && !t.competencia.startsWith(competencia)) return false;
+    if (empresaFiltro !== "todos" && t.empresa_id !== empresaFiltro) return false;
     if (!q) return true;
     const s = q.toLowerCase();
     return (
@@ -81,6 +83,11 @@ function TarefasList() {
   });
 
   const competencias = Array.from(new Set((tarefas ?? []).map((t) => t.competencia.slice(0, 7)))).sort((a, b) => b.localeCompare(a));
+  const empresasUnicas = Array.from(
+    new Map(
+      (tarefas ?? []).map((t) => [t.empresa_id, t.empresas?.nome_fantasia || t.empresas?.razao_social || "—"] as const),
+    ).entries(),
+  ).sort((a, b) => a[1].localeCompare(b[1]));
 
   const counts = {
     todos: tarefas?.length ?? 0,
@@ -102,6 +109,16 @@ function TarefasList() {
             <option value="todos">Todas as competências</option>
             {competencias.map((item) => (
               <option key={item} value={item}>{competenciaLabel(item)}</option>
+            ))}
+          </select>
+          <select
+            value={empresaFiltro}
+            onChange={(e) => setEmpresaFiltro(e.target.value)}
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm max-w-xs"
+          >
+            <option value="todos">Todas as empresas</option>
+            {empresasUnicas.map(([id, nome]) => (
+              <option key={id} value={id}>{nome}</option>
             ))}
           </select>
         </div>
