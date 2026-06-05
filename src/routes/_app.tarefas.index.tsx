@@ -18,6 +18,8 @@ type Tarefa = {
   id: string; empresa_id: string; competencia: string; titulo: string;
   categoria: string | null; status: string; classificacao: string;
   possui_imposto: boolean | null; faturamento: number | null; valor_imposto: number | null;
+  vencimento: string | null; enviado_ao_cliente: boolean | null; enviado_em: string | null;
+  relatorio_id: string | null;
   recorrente: boolean; concluido_em: string | null;
   empresas?: { razao_social: string; nome_fantasia: string | null } | null;
 };
