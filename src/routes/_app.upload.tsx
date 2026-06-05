@@ -213,6 +213,7 @@ function UploadPage() {
         possui_imposto: possuiImposto,
         faturamento: fatNum,
         valor_imposto: impNum,
+        vencimento: vencimentoFinal,
         status: "pendente",
       }).select("id").single();
       if (tarefaError) throw tarefaError;
