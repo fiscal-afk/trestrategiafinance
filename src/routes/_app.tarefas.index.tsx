@@ -236,11 +236,39 @@ function TarefaRow({
 
         {open && (
           <div className="border-t p-4 bg-muted/20 space-y-3">
-            <div className="grid sm:grid-cols-3 gap-3 text-sm">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
               <Info label="Faturamento" value={t.faturamento != null ? brl(t.faturamento) : "—"} />
-              <Info label="Valor do imposto" value={t.valor_imposto != null ? brl(t.valor_imposto) : "—"} />
+              <Info label="Valor do DAS" value={t.valor_imposto != null ? brl(t.valor_imposto) : "—"} />
+              <Info label="Vencimento" value={t.vencimento ? ptDate(t.vencimento) : "—"} />
               <Info label="Status" value={concluida ? `Concluída em ${ptDate(t.concluido_em)}` : "Pendente"} />
             </div>
+
+            {t.relatorio_id && (
+              <div className="flex flex-wrap gap-2">
+                <Button asChild size="sm" variant="outline">
+                  <Link to="/relatorios/$id" params={{ id: t.relatorio_id }}>
+                    <ExternalLink className="h-4 w-4 mr-2" /> Visualizar relatório
+                  </Link>
+                </Button>
+                <Button asChild size="sm" variant="outline">
+                  <Link to="/relatorios/$id" params={{ id: t.relatorio_id }}>
+                    <ExternalLink className="h-4 w-4 mr-2" /> Abrir relatório
+                  </Link>
+                </Button>
+                <Button
+                  size="sm"
+                  variant={t.enviado_ao_cliente ? "secondary" : "default"}
+                  onClick={() => marcarEnviado.mutate({ id: t.id, enviado: !t.enviado_ao_cliente })}
+                  disabled={marcarEnviado.isPending}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {t.enviado_ao_cliente
+                    ? `Enviado em ${ptDate(t.enviado_em)}`
+                    : "Marcar como enviado ao cliente"}
+                </Button>
+              </div>
+            )}
+
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Checklist obrigatório</p>
               <div className="space-y-2">
