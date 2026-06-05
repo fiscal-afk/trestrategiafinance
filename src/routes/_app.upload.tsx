@@ -13,6 +13,7 @@ import {
   detectDocType,
   extractPgdasFields,
   extractCnpj,
+  extractDasVencimento,
   formatCnpj,
   type DocType,
   type PgdasFields,
