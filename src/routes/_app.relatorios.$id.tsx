@@ -226,6 +226,11 @@ function ReportPage() {
                   </div>
                 </CardContent>
               </Card>
+              <p className="text-sm text-muted-foreground mt-2">
+                {cresc >= 0
+                  ? `Em comparação à competência anterior, o faturamento apresentou crescimento de ${pct(Math.abs(cresc))}.`
+                  : `Em comparação à competência anterior, o faturamento apresentou redução de ${pct(Math.abs(cresc))}.`}
+              </p>
             </section>
           )}
         </div>
