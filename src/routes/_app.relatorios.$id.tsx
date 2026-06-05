@@ -197,6 +197,9 @@ function ReportPage() {
                 </div>
               </CardContent>
             </Card>
+            <p className="text-sm text-muted-foreground mt-2">
+              A receita mensal representa {pct(percentual)} da receita acumulada considerada para a apuração.
+            </p>
           </section>
 
           {/* Comparação Mensal — Bar Chart */}
