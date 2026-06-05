@@ -243,6 +243,8 @@ export type Database = {
           concluido_em: string | null
           created_at: string
           empresa_id: string
+          enviado_ao_cliente: boolean
+          enviado_em: string | null
           faturamento: number | null
           id: string
           possui_imposto: boolean | null
@@ -250,8 +252,10 @@ export type Database = {
           relatorio_id: string | null
           status: string
           titulo: string
+          ultimo_lembrete_em: string | null
           updated_at: string
           valor_imposto: number | null
+          vencimento: string | null
         }
         Insert: {
           categoria?: string | null
@@ -261,6 +265,8 @@ export type Database = {
           concluido_em?: string | null
           created_at?: string
           empresa_id: string
+          enviado_ao_cliente?: boolean
+          enviado_em?: string | null
           faturamento?: number | null
           id?: string
           possui_imposto?: boolean | null
@@ -268,8 +274,10 @@ export type Database = {
           relatorio_id?: string | null
           status?: string
           titulo: string
+          ultimo_lembrete_em?: string | null
           updated_at?: string
           valor_imposto?: number | null
+          vencimento?: string | null
         }
         Update: {
           categoria?: string | null
@@ -279,6 +287,8 @@ export type Database = {
           concluido_em?: string | null
           created_at?: string
           empresa_id?: string
+          enviado_ao_cliente?: boolean
+          enviado_em?: string | null
           faturamento?: number | null
           id?: string
           possui_imposto?: boolean | null
@@ -286,8 +296,10 @@ export type Database = {
           relatorio_id?: string | null
           status?: string
           titulo?: string
+          ultimo_lembrete_em?: string | null
           updated_at?: string
           valor_imposto?: number | null
+          vencimento?: string | null
         }
         Relationships: []
       }

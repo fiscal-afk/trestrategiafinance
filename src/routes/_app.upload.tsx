@@ -13,6 +13,7 @@ import {
   detectDocType,
   extractPgdasFields,
   extractCnpj,
+  extractDasVencimento,
   formatCnpj,
   type DocType,
   type PgdasFields,
@@ -30,6 +31,7 @@ type ParsedFile = {
   docType?: DocType;
   cnpj?: string | null;
   fields?: PgdasFields;
+  dasVencimento?: string | null;
   error?: string;
 };
 
@@ -80,9 +82,10 @@ function UploadPage() {
         const docType = detectDocType(text);
         const cnpj = extractCnpj(text);
         const fields = docType === "pgdas" ? extractPgdasFields(text) : undefined;
+        const dasVencimento = docType === "das" ? extractDasVencimento(text) : null;
         setFiles((prev) =>
           prev.map((p) =>
-            p.id === item.id ? { ...p, status: "ready", docType, cnpj: fields?.cnpj ?? cnpj, fields } : p,
+            p.id === item.id ? { ...p, status: "ready", docType, cnpj: fields?.cnpj ?? cnpj, fields, dasVencimento } : p,
           ),
         );
       } catch (err) {
@@ -123,12 +126,18 @@ function UploadPage() {
       }
 
       const ext = pgdasParsed.fields;
+      // Se houver guia DAS com data extraída, ela tem prioridade sobre o cálculo padrão
+      const dasFile = files.find((f) => f.docType === "das" && f.dasVencimento);
+      const vencimentoFinal = dasFile?.dasVencimento ?? ext.vencimento ?? null;
       for (const log of ext.logs) {
         console.info(`[PGDAS] ${log.campo}`, {
           original: log.original,
           convertido: log.convertido,
           salvo: log.salvo,
         });
+      }
+      if (dasFile?.dasVencimento) {
+        console.info(`[DAS] vencimento extraído da guia: ${dasFile.dasVencimento}`);
       }
 
       // Create relatório
@@ -141,7 +150,7 @@ function UploadPage() {
           faturamento_anual: ext.faturamento_anual ?? 0,
           imposto: ext.imposto ?? 0,
           aliquota: ext.aliquota ?? 0,
-          vencimento: ext.vencimento,
+          vencimento: vencimentoFinal,
           competencia_anterior: ext.competencia_anterior,
           faturamento_mes_anterior: ext.faturamento_mes_anterior,
           status: "concluido",
@@ -204,6 +213,7 @@ function UploadPage() {
         possui_imposto: possuiImposto,
         faturamento: fatNum,
         valor_imposto: impNum,
+        vencimento: vencimentoFinal,
         status: "pendente",
       }).select("id").single();
       if (tarefaError) throw tarefaError;

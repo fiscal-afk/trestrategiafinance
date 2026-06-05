@@ -131,6 +131,24 @@ function validateMoney(value: number | null, label: string, inconsistencias: str
   if (Math.abs(value) > MAX_SAFE_FINANCIAL) inconsistencias.push(`${label} excede o limite financeiro suportado.`);
 }
 
+export function extractDasVencimento(text: string): string | null {
+  const normalized = normalizeText(text);
+  // Padrões comuns no DAS: "Data de Vencimento 20/06/2026", "Vencimento: 20/06/2026", etc.
+  const patterns = [
+    /Data\s+de\s+Vencimento[^\d]{0,40}(\d{2})\/(\d{2})\/(\d{4})/i,
+    /Vencimento[^\d]{0,40}(\d{2})\/(\d{2})\/(\d{4})/i,
+    /Vencimento\s+do\s+DAS[^\d]{0,40}(\d{2})\/(\d{2})\/(\d{4})/i,
+  ];
+  for (const re of patterns) {
+    const m = normalized.match(re);
+    if (m) {
+      const [, dd, mm, yyyy] = m;
+      return `${yyyy}-${mm}-${dd}`;
+    }
+  }
+  return null;
+}
+
 export function extractCnpj(text: string): string | null {
   const m = text.match(/(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/);
   return m ? m[1].replace(/\D/g, "") : null;
