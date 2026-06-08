@@ -48,9 +48,31 @@ export async function ensureTarefasCompetencia(competencia: string): Promise<num
   let created = 0;
 
   for (const emp of empresas) {
-    if (tarefaByEmp.has(emp.id)) continue;
     const rel = relByEmp.get(emp.id);
     const nome = emp.nome_fantasia || emp.razao_social;
+    const existente = tarefaByEmp.get(emp.id);
+
+    if (existente) {
+      // Se já existe tarefa mas surgiu relatório depois, promove de sem_info para com/sem imposto
+      if (rel && existente.classificacao === "sem_info") {
+        const imp = Number(rel.imposto ?? 0);
+        const possui = imp > 0;
+        await (supabase as any)
+          .from("tarefas")
+          .update({
+            relatorio_id: rel.id,
+            categoria: possui ? "Imposto a pagar" : "Sem imposto",
+            classificacao: possui ? "com_imposto" : "sem_imposto",
+            possui_imposto: possui,
+            faturamento: Number(rel.faturamento_mensal ?? 0),
+            valor_imposto: imp,
+            vencimento: rel.vencimento,
+          })
+          .eq("id", existente.id);
+      }
+      continue;
+    }
+
     if (rel) {
       const imp = Number(rel.imposto ?? 0);
       const possui = imp > 0;

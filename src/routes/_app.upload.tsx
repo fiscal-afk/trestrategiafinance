@@ -205,13 +205,6 @@ function UploadPage() {
       const titulo = `${matchedEmpresa.nome_fantasia || matchedEmpresa.razao_social} — ${ext.competencia ?? ""}`;
       const compTarefa = ext.competencia ?? new Date().toISOString().slice(0, 10);
 
-      const existente = await (supabase as any)
-        .from("tarefas")
-        .select("id")
-        .eq("empresa_id", empresa_id)
-        .eq("competencia", compTarefa)
-        .maybeSingle();
-
       const tarefaPayload = {
         empresa_id,
         relatorio_id: rel.id,
@@ -226,23 +219,14 @@ function UploadPage() {
         status: "pendente",
       };
 
-      let tarefaId: string;
-      if (existente.data?.id) {
-        tarefaId = existente.data.id;
-        const { error: upErr } = await (supabase as any)
-          .from("tarefas")
-          .update(tarefaPayload)
-          .eq("id", tarefaId);
-        if (upErr) throw upErr;
-      } else {
-        const { data: inserted, error: insErr } = await (supabase as any)
-          .from("tarefas")
-          .insert(tarefaPayload)
-          .select("id")
-          .single();
-        if (insErr) throw insErr;
-        tarefaId = inserted.id;
-      }
+      // Upsert por (empresa_id, competencia) — garante 1 tarefa única
+      const { data: upserted, error: upsertErr } = await (supabase as any)
+        .from("tarefas")
+        .upsert(tarefaPayload, { onConflict: "empresa_id,competencia" })
+        .select("id")
+        .single();
+      if (upsertErr) throw upsertErr;
+      const tarefaId = upserted.id as string;
 
       // Garante itens do checklist (sem duplicar)
       const checklistExistente = await (supabase as any)
