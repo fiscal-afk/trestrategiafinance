@@ -71,6 +71,30 @@ function TarefasList() {
     },
   });
 
+  const gerarTarefasMutation = useMutation({
+    mutationFn: async (comp: string) => ensureTarefasCompetencia(comp),
+    onSuccess: (created, comp) => {
+      qc.invalidateQueries({ queryKey: ["tarefas"] });
+      toast.success(
+        created > 0
+          ? `${created} tarefa(s) criada(s) para ${competenciaLabel(comp)}`
+          : `Todas as empresas já possuem tarefa em ${competenciaLabel(comp)}`,
+      );
+    },
+    onError: (e: any) => toast.error("Erro", { description: e.message }),
+  });
+
+  // Auto-gera tarefas da competência atual na primeira carga
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (autoRan.current || !tarefas) return;
+    autoRan.current = true;
+    const comp = currentCompetencia();
+    ensureTarefasCompetencia(comp).then((n) => {
+      if (n > 0) qc.invalidateQueries({ queryKey: ["tarefas"] });
+    }).catch(() => {});
+  }, [tarefas, qc]);
+
   const filtered = (tarefas ?? []).filter((t) => {
     if (filtro !== "todos" && t.classificacao !== filtro) return false;
     if (competencia !== "todos" && !t.competencia.startsWith(competencia)) return false;
