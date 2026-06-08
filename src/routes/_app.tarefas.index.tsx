@@ -148,9 +148,19 @@ function TarefasList() {
             ))}
           </select>
         </div>
-        <Button asChild>
-          <Link to="/tarefas/nova"><Plus className="h-4 w-4 mr-2" /> Nova tarefa</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => gerarTarefasMutation.mutate(competencia !== "todos" ? competencia : currentCompetencia())}
+            disabled={gerarTarefasMutation.isPending}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${gerarTarefasMutation.isPending ? "animate-spin" : ""}`} />
+            Gerar tarefas da competência
+          </Button>
+          <Button asChild>
+            <Link to="/tarefas/nova"><Plus className="h-4 w-4 mr-2" /> Nova tarefa</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-2 flex-wrap">
