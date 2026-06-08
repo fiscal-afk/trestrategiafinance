@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { brl, ptDate } from "@/lib/format";
-import { CheckCircle2, Circle, ChevronDown, ChevronRight, Plus, ExternalLink, Send } from "lucide-react";
+import { CheckCircle2, Circle, ChevronDown, ChevronRight, Plus, ExternalLink, Send, RefreshCw } from "lucide-react";
+import { ensureTarefasCompetencia, currentCompetencia } from "@/lib/ensure-tarefas";
+
 
 export const Route = createFileRoute("/_app/tarefas/")({
   component: TarefasList,
@@ -69,6 +71,30 @@ function TarefasList() {
     },
   });
 
+  const gerarTarefasMutation = useMutation({
+    mutationFn: async (comp: string) => ensureTarefasCompetencia(comp),
+    onSuccess: (created, comp) => {
+      qc.invalidateQueries({ queryKey: ["tarefas"] });
+      toast.success(
+        created > 0
+          ? `${created} tarefa(s) criada(s) para ${competenciaLabel(comp)}`
+          : `Todas as empresas já possuem tarefa em ${competenciaLabel(comp)}`,
+      );
+    },
+    onError: (e: any) => toast.error("Erro", { description: e.message }),
+  });
+
+  // Auto-gera tarefas da competência atual na primeira carga
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (autoRan.current || !tarefas) return;
+    autoRan.current = true;
+    const comp = currentCompetencia();
+    ensureTarefasCompetencia(comp).then((n) => {
+      if (n > 0) qc.invalidateQueries({ queryKey: ["tarefas"] });
+    }).catch(() => {});
+  }, [tarefas, qc]);
+
   const filtered = (tarefas ?? []).filter((t) => {
     if (filtro !== "todos" && t.classificacao !== filtro) return false;
     if (competencia !== "todos" && !t.competencia.startsWith(competencia)) return false;
@@ -122,9 +148,19 @@ function TarefasList() {
             ))}
           </select>
         </div>
-        <Button asChild>
-          <Link to="/tarefas/nova"><Plus className="h-4 w-4 mr-2" /> Nova tarefa</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => gerarTarefasMutation.mutate(competencia !== "todos" ? competencia : currentCompetencia())}
+            disabled={gerarTarefasMutation.isPending}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${gerarTarefasMutation.isPending ? "animate-spin" : ""}`} />
+            Gerar tarefas da competência
+          </Button>
+          <Button asChild>
+            <Link to="/tarefas/nova"><Plus className="h-4 w-4 mr-2" /> Nova tarefa</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-2 flex-wrap">

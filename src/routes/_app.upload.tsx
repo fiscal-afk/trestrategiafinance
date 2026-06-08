@@ -197,16 +197,25 @@ function UploadPage() {
           .eq("id", rel.id);
       }
 
-      // Cria tarefa automática e classifica
+      // Cria/atualiza tarefa automática (uma por empresa+competência) e classifica
       const fatNum = Number(ext.faturamento_mensal ?? 0);
       const impNum = Number(ext.imposto ?? 0);
       const possuiImposto = impNum > 0;
       const classificacao = possuiImposto ? "com_imposto" : "sem_imposto";
       const titulo = `${matchedEmpresa.nome_fantasia || matchedEmpresa.razao_social} — ${ext.competencia ?? ""}`;
-      const { data: tarefaCriada, error: tarefaError } = await (supabase as any).from("tarefas").insert({
+      const compTarefa = ext.competencia ?? new Date().toISOString().slice(0, 10);
+
+      const existente = await (supabase as any)
+        .from("tarefas")
+        .select("id")
+        .eq("empresa_id", empresa_id)
+        .eq("competencia", compTarefa)
+        .maybeSingle();
+
+      const tarefaPayload = {
         empresa_id,
         relatorio_id: rel.id,
-        competencia: ext.competencia ?? new Date().toISOString().slice(0, 10),
+        competencia: compTarefa,
         titulo,
         categoria: possuiImposto ? "Imposto a pagar" : "Sem imposto",
         classificacao,
@@ -215,16 +224,42 @@ function UploadPage() {
         valor_imposto: impNum,
         vencimento: vencimentoFinal,
         status: "pendente",
-      }).select("id").single();
-      if (tarefaError) throw tarefaError;
+      };
 
-      await (supabase as any).from("checklist_tarefa").insert(
-        ["das", "declaracao", "recibo"].map((tipo) => ({
-          tarefa_id: tarefaCriada.id,
+      let tarefaId: string;
+      if (existente.data?.id) {
+        tarefaId = existente.data.id;
+        const { error: upErr } = await (supabase as any)
+          .from("tarefas")
+          .update(tarefaPayload)
+          .eq("id", tarefaId);
+        if (upErr) throw upErr;
+      } else {
+        const { data: inserted, error: insErr } = await (supabase as any)
+          .from("tarefas")
+          .insert(tarefaPayload)
+          .select("id")
+          .single();
+        if (insErr) throw insErr;
+        tarefaId = inserted.id;
+      }
+
+      // Garante itens do checklist (sem duplicar)
+      const checklistExistente = await (supabase as any)
+        .from("checklist_tarefa")
+        .select("tipo")
+        .eq("tarefa_id", tarefaId);
+      const tiposExistentes = new Set(((checklistExistente.data ?? []) as Array<{ tipo: string }>).map((c) => c.tipo));
+      const novosItens = ["das", "declaracao", "recibo"]
+        .filter((tipo) => !tiposExistentes.has(tipo))
+        .map((tipo) => ({
+          tarefa_id: tarefaId,
           tipo,
           concluido: uploads.some((u) => u.tipo === tipo),
-        })),
-      );
+        }));
+      if (novosItens.length) {
+        await (supabase as any).from("checklist_tarefa").insert(novosItens);
+      }
 
       return rel.id as string;
     },
