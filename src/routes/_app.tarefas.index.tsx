@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { brl, ptDate } from "@/lib/format";
-import { CheckCircle2, Circle, ChevronDown, ChevronRight, Plus, ExternalLink, Send } from "lucide-react";
+import { CheckCircle2, Circle, ChevronDown, ChevronRight, Plus, ExternalLink, Send, RefreshCw } from "lucide-react";
+import { ensureTarefasCompetencia, currentCompetencia } from "@/lib/ensure-tarefas";
+import { useEffect, useRef } from "react";
 
 export const Route = createFileRoute("/_app/tarefas/")({
   component: TarefasList,
