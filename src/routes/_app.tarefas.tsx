@@ -8,7 +8,6 @@ export const Route = createFileRoute("/_app/tarefas")({
 const tabs = [
   { to: "/tarefas", label: "Todas as tarefas", exact: true },
   { to: "/tarefas/recorrentes", label: "Recorrentes" },
-  { to: "/tarefas/nova", label: "Criar tarefa" },
 ];
 
 function TarefasLayout() {

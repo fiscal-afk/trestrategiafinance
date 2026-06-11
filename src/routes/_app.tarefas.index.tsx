@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { brl, ptDate } from "@/lib/format";
-import { CheckCircle2, Circle, ChevronDown, ChevronRight, Plus, ExternalLink, Send, RefreshCw } from "lucide-react";
+import { CheckCircle2, Circle, ChevronDown, ChevronRight, ExternalLink, Send, RefreshCw } from "lucide-react";
 import { ensureTarefasCompetencia, currentCompetencia } from "@/lib/ensure-tarefas";
 
 
@@ -156,9 +156,6 @@ function TarefasList() {
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${gerarTarefasMutation.isPending ? "animate-spin" : ""}`} />
             Gerar tarefas da competência
-          </Button>
-          <Button asChild>
-            <Link to="/tarefas/nova"><Plus className="h-4 w-4 mr-2" /> Nova tarefa</Link>
           </Button>
         </div>
       </div>
