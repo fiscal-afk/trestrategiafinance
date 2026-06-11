@@ -181,7 +181,7 @@ function TarefasList() {
         <p className="text-center py-12 text-muted-foreground">Carregando…</p>
       ) : filtered.length === 0 ? (
         <Card><CardContent className="py-12 text-center text-muted-foreground">
-          Nenhuma tarefa encontrada. <Link to="/tarefas/nova" className="text-accent underline">Criar a primeira</Link>
+          Nenhuma tarefa encontrada. As tarefas são geradas automaticamente ao processar relatórios na tela de <Link to="/upload" className="text-accent underline">Upload</Link>.
         </CardContent></Card>
       ) : (
         <div className="space-y-2">
