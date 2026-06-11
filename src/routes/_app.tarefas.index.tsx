@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { brl, ptDate } from "@/lib/format";
-import { CheckCircle2, Circle, ChevronDown, ChevronRight, Plus, ExternalLink, Send, RefreshCw } from "lucide-react";
+import { CheckCircle2, Circle, ChevronDown, ChevronRight, ExternalLink, Send, RefreshCw } from "lucide-react";
 import { ensureTarefasCompetencia, currentCompetencia } from "@/lib/ensure-tarefas";
 
 
@@ -157,9 +157,6 @@ function TarefasList() {
             <RefreshCw className={`h-4 w-4 mr-2 ${gerarTarefasMutation.isPending ? "animate-spin" : ""}`} />
             Gerar tarefas da competência
           </Button>
-          <Button asChild>
-            <Link to="/tarefas/nova"><Plus className="h-4 w-4 mr-2" /> Nova tarefa</Link>
-          </Button>
         </div>
       </div>
 
@@ -184,7 +181,7 @@ function TarefasList() {
         <p className="text-center py-12 text-muted-foreground">Carregando…</p>
       ) : filtered.length === 0 ? (
         <Card><CardContent className="py-12 text-center text-muted-foreground">
-          Nenhuma tarefa encontrada. <Link to="/tarefas/nova" className="text-accent underline">Criar a primeira</Link>
+          Nenhuma tarefa encontrada. As tarefas são geradas automaticamente ao processar relatórios na tela de <Link to="/upload" className="text-accent underline">Upload</Link>.
         </CardContent></Card>
       ) : (
         <div className="space-y-2">
