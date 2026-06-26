@@ -286,10 +286,14 @@ function TarefaRow({
         {open && (
           <div className="border-t p-4 bg-muted/20 space-y-3">
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+              <Info label="Competência" value={ptDate(t.competencia)} />
               <Info label="Faturamento" value={t.faturamento != null ? brl(t.faturamento) : "—"} />
               <Info label="Valor do DAS" value={t.valor_imposto != null ? brl(t.valor_imposto) : "—"} />
+              <Info label="Alíquota Efetiva" value={t.relatorios?.aliquota != null ? `${Number(t.relatorios.aliquota).toFixed(2)}%` : "—"} />
               <Info label="Vencimento" value={t.vencimento ? ptDate(t.vencimento) : "—"} />
-              <Info label="Status" value={concluida ? `Concluída em ${ptDate(t.concluido_em)}` : "Pendente"} />
+              <Info label="Status" value={cls.label} />
+              <Info label="Última atualização" value={t.updated_at ? ptDate(t.updated_at) : "—"} />
+              <Info label="Conclusão" value={concluida ? ptDate(t.concluido_em) : "—"} />
             </div>
 
             {t.relatorio_id && (
