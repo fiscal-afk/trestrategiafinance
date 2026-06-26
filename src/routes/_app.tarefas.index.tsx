@@ -64,7 +64,7 @@ function TarefasList() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("tarefas")
-        .select("*, empresas(razao_social, nome_fantasia)")
+        .select("*, empresas(razao_social, nome_fantasia), relatorios(aliquota)")
         .order("competencia", { ascending: false })
         .order("created_at", { ascending: false });
       if (error) throw error;
