@@ -22,26 +22,27 @@ type Tarefa = {
   possui_imposto: boolean | null; faturamento: number | null; valor_imposto: number | null;
   vencimento: string | null; enviado_ao_cliente: boolean | null; enviado_em: string | null;
   relatorio_id: string | null;
-  recorrente: boolean; concluido_em: string | null;
+  recorrente: boolean; concluido_em: string | null; updated_at: string | null;
   empresas?: { razao_social: string; nome_fantasia: string | null } | null;
+  relatorios?: { aliquota: number | null } | null;
 };
 type Item = { id: string; tarefa_id: string; tipo: string; concluido: boolean; arquivo_url: string | null };
 
 const TIPOS = ["das", "declaracao", "recibo"] as const;
 const TIPO_LABEL: Record<string, string> = { das: "DAS", declaracao: "Declaração", recibo: "Recibo" };
 
-const CLASSIF: Record<string, { label: string; cls: string }> = {
-  com_imposto: { label: "Com imposto", cls: "bg-success/15 text-success border-success/30" },
-  sem_imposto: { label: "Sem imposto", cls: "bg-muted text-muted-foreground border-border" },
-  sem_info: { label: "Sem informação", cls: "bg-destructive/15 text-destructive border-destructive/30" },
+const CLASSIF: Record<string, { label: string; cls: string; dot: string }> = {
+  com_imposto: { label: "Com imposto", cls: "bg-success/15 text-success border-success/30", dot: "bg-success" },
+  sem_imposto: { label: "Sem imposto", cls: "bg-muted text-muted-foreground border-border", dot: "bg-muted-foreground" },
+  sem_info: { label: "Pendente", cls: "bg-destructive/15 text-destructive border-destructive/30", dot: "bg-destructive" },
 };
 
 type Filtro = "todos" | "com_imposto" | "sem_imposto" | "sem_info";
 const FILTROS: { id: Filtro; label: string }[] = [
-  { id: "todos", label: "Todos" },
-  { id: "com_imposto", label: "Com imposto" },
-  { id: "sem_imposto", label: "Sem imposto" },
-  { id: "sem_info", label: "Sem informação" },
+  { id: "todos", label: "Todas" },
+  { id: "sem_info", label: "🔴 Pendentes" },
+  { id: "com_imposto", label: "🟢 Com Imposto" },
+  { id: "sem_imposto", label: "⚪ Sem Imposto" },
 ];
 
 const competenciaLabel = (value: string) => {
