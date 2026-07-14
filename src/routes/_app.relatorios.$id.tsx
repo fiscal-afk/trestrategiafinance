@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download } from "lucide-react";
 import { brl, pct, ptDate, competenciaRange, monthLabel } from "@/lib/format";
+import { TrLogo } from "@/components/TrLogo";
 import {
   ResponsiveContainer,
   BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip,
