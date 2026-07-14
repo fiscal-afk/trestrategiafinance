@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download } from "lucide-react";
 import { brl, pct, ptDate, competenciaRange, monthLabel } from "@/lib/format";
+import { TrLogo } from "@/components/TrLogo";
 import {
   ResponsiveContainer,
   BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip,
@@ -128,10 +129,13 @@ function ReportPage() {
       </div>
 
       <article id="relatorio-print" className="bg-card rounded-xl overflow-hidden border" style={{ boxShadow: "var(--shadow-elegant)" }}>
-        <header className="p-8 lg:p-12 text-primary-foreground" style={{ background: "var(--gradient-primary)" }}>
-          <p className="text-xs uppercase tracking-[0.25em] opacity-70">TR Estratégia Empresarial</p>
-          <h1 className="font-display text-3xl lg:text-5xl mt-3">{relatorio.empresas.nome_fantasia || relatorio.empresas.razao_social}</h1>
-          <p className="mt-4 text-primary-foreground/80">Competência: <strong className="text-primary-foreground">{competenciaRange(relatorio.competencia)}</strong></p>
+        <header className="p-8 lg:p-12 text-primary-foreground flex items-start justify-between gap-6" style={{ background: "var(--gradient-primary)" }}>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs uppercase tracking-[0.25em] opacity-70">TR Estratégia Empresarial</p>
+            <h1 className="font-display text-3xl lg:text-5xl mt-3">{relatorio.empresas.nome_fantasia || relatorio.empresas.razao_social}</h1>
+            <p className="mt-4 text-primary-foreground/80">Competência: <strong className="text-primary-foreground">{competenciaRange(relatorio.competencia)}</strong></p>
+          </div>
+          <TrLogo className="text-primary-foreground shrink-0" />
         </header>
 
         <div className="p-6 lg:p-8 space-y-6 print-flow">
