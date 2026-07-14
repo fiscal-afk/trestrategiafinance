@@ -4,8 +4,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Fira+Sans:wght@300;400;500;600;700&display=swap");
-
 @theme inline {
   --font-display: "DM Serif Display", serif;
   --font-sans: "Fira Sans", system-ui, sans-serif;
